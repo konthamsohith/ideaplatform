@@ -1,18 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
 
 :root {
-  /* Avanza Framer Template Aesthetic */
-  --background: #f7fafd;
-  --foreground: #111111;
-  --primary: #4f46e5;
-  --black: #0f1115;
+  /* Idea Platform Design System */
+  --background: #f0f7ff;
+  --foreground: #000000;
+  --primary: #007aff;
+  --black: #000000;
   --white: #ffffff;
-  --lime: #ccff00;
-  --blue: #1d72fe;
-  --muted: #6b7280;
-  --muted-bg: #f9fafb;
+  --lime: #bbf451;
+  --blue: #007aff;
+  --muted: #64748b;
+  --muted-bg: #f4f7fb;
   --card-bg: #ffffff;
-  --border-color: #eaedf0;
+  --border-color: #e4eaf2;
 }
 
 * {
@@ -23,9 +23,11 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-optical-sizing: auto;
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -284,7 +286,7 @@ a {
 
 .base-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
 }
 
 .input-error {

@@ -1,6 +1,6 @@
 /* Avanza Framer Template Styles */
 
-/* Base Mesh Background */
+/* Base avanza-home wrapper */
 .avanza-home {
     position: relative;
     min-height: 100vh;
@@ -8,54 +8,69 @@
     overflow: hidden;
 }
 
-.avanza-bg-mesh {
+/* ── Framer Motion Hero Background ─────────────────────────── */
+.hero-bg-mesh {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: -1;
-    background-color: #f7fafd;
+    background-color: #f0f7ff;
+    overflow: hidden;
 }
 
-.mesh-color {
+.hero-blob {
     position: absolute;
-    filter: blur(140px);
     border-radius: 50%;
-    opacity: 0.6;
+    pointer-events: none;
+    will-change: transform;
 }
 
-.mesh-blue {
-    width: 800px;
-    height: 800px;
-    background: #bce3fb;
-    top: -20%;
-    left: -10%;
+/* Blue – top-left */
+.blob-blue {
+    width: 950px;
+    height: 950px;
+    background: radial-gradient(circle at center, #a8d8f8 0%, #c5eaff 45%, transparent 75%);
+    filter: blur(80px);
+    opacity: 0.78;
+    top: -28%;
+    left: -18%;
 }
 
-.mesh-pink {
-    width: 600px;
-    height: 600px;
-    background: #fadce9;
-    bottom: 0%;
-    left: 25%;
+/* Lavender – soft centre accent */
+.blob-lavender {
+    width: 540px;
+    height: 540px;
+    background: radial-gradient(circle at center, #ddd4f5 0%, #ece6ff 45%, transparent 75%);
+    filter: blur(90px);
+    opacity: 0.46;
+    top: 12%;
+    left: 26%;
 }
 
-.mesh-yellow {
-    width: 700px;
-    height: 700px;
-    background: #fdfbb7;
-    bottom: -10%;
-    right: 20%;
+/* Mint – bottom-right */
+.blob-mint {
+    width: 680px;
+    height: 680px;
+    background: radial-gradient(circle at center, #b8f0d4 0%, #d4f5e9 45%, transparent 75%);
+    filter: blur(75px);
+    opacity: 0.72;
+    bottom: -8%;
+    right: 10%;
 }
 
-.mesh-green {
-    width: 500px;
-    height: 500px;
-    background: #d6fae2;
-    bottom: 10%;
-    right: -5%;
+/* Teal – far bottom-right */
+.blob-teal {
+    width: 750px;
+    height: 750px;
+    background: radial-gradient(circle at center, #a0ddc0 0%, #b8ead6 45%, transparent 75%);
+    filter: blur(100px);
+    opacity: 0.60;
+    bottom: 2%;
+    right: -14%;
 }
+
 
 /* Hero Section */
 .avanza-hero {
@@ -84,7 +99,7 @@
 }
 
 .badge-new {
-    background: var(--blue, #1d72fe);
+    background: var(--blue, #007aff);
     color: #fff;
     padding: 0.2rem 0.6rem;
     border-radius: 50px;

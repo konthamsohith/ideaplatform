@@ -1,15 +1,11 @@
 import Link from "next/link";
 import './landing.css';
+import HeroBg from "./components/HeroBg";
 
 export default function Home() {
     return (
         <main className="avanza-home">
-            <div className="avanza-bg-mesh">
-                <div className="mesh-color mesh-blue"></div>
-                <div className="mesh-color mesh-pink"></div>
-                <div className="mesh-color mesh-yellow"></div>
-                <div className="mesh-color mesh-green"></div>
-            </div>
+            <HeroBg />
 
             <section className="avanza-hero text-center">
                 <div className="badge-pill mb-4 mx-auto">
