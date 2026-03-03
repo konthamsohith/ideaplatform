@@ -116,9 +116,9 @@ export default function Home() {
             </section>
 
             <FeaturedProblems />
-            <WhyBuild />
+            <div id="why-build"><WhyBuild /></div>
             <Testimonials />
-            <FAQSection />
+            <div id="faq-section"><FAQSection /></div>
         </main>
     );
 }
