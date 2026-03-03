@@ -1,53 +1,94 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
-interface FAQItem {
-    question: string;
-    answer: string;
-}
-
-const faqs: FAQItem[] = [
+const faqs = [
     {
-        question: "Do I have to give up equity to post a problem?",
-        answer: "No. Posting problems is completely free. If a team builds a solution to your problem, they own the equity, but may offer you an advisory role or equity based on your continued involvement."
+        question: "Can I use what I validate to build client projects?",
+        answer: "Absolutely! All problems you validate on Idea Platform are yours to act on. Many builders go on to pitch solutions to clients or build startups directly from their validated ideas.",
     },
     {
-        question: "How does the AI Refinement work?",
-        answer: "When you dump a problem, our LLM agent analyzes the text, asks clarifying questions, and structures it into a technical requirements doc for builders to consume."
+        question: "What does the AI Refinement feature do?",
+        answer: "When you submit a problem, our AI agent analyzes it, asks clarifying questions, and structures it into a clear technical requirements doc — ready for builders or investors to consume immediately.",
     },
     {
-        question: "Who can join the Builder directory?",
-        answer: "Anyone! Whether you are a full-stack engineer, a UX designer, or a domain-expert researcher, you can create a profile and join teams working on validated problems."
+        question: "How do I contact support?",
+        answer: "You can reach us via the Contact page or use the in-app chat. We typically respond within a few hours and are available 7 days a week.",
     },
     {
-        question: "How are investors integrated into the platform?",
-        answer: "Startups that form around validated problems are showcased in the Investor Hub. Investors can view traction metrics, team composition, and directly request meetings within the platform."
-    }
+        question: "I'm facing login or access issues — what should I do?",
+        answer: "Try clearing your browser cache and refreshing. If the issue persists, use the 'Reset Password' option on the login screen or reach out to support with your registered email.",
+    },
+    {
+        question: "Are the problems updated regularly?",
+        answer: "Yes! New validated problems are added every week across categories like AI & Tech, Social Impact, and Open Source. Subscribe to our newsletter to get first access.",
+    },
+    {
+        question: "What makes Idea Platform different from other platforms?",
+        answer: "We focus exclusively on real-world, validated problems — not theoretical exercises. Every problem listed has been vetted for market relevance, so you're always building something that matters.",
+    },
 ];
 
-export default function FAQ() {
-    const [openIndex, setOpenIndex] = useState<number | null>(0);
+export default function FAQSection() {
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
 
     return (
-        <div className="faq-container">
-            {faqs.map((faq, index) => (
-                <div
-                    key={index}
-                    className={`faq-item ${openIndex === index ? 'open' : ''}`}
-                    onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                >
-                    <div className="faq-question">
-                        <h4>{faq.question}</h4>
-                        <span className="faq-toggle">{openIndex === index ? '−' : '+'}</span>
+        <section className="faq-section">
+            {/* Gradient bg blob */}
+            <div className="faq-bg" aria-hidden="true" />
+
+            <div className="faq-inner container">
+                {/* Header */}
+                <div className="faq-header">
+                    <h2 className="faq-title">Frequently Asked Questions</h2>
+                    <p className="faq-subtitle">
+                        If you have any other questions, feel free to reach out directly.
+                    </p>
+                    <div className="faq-btns">
+                        <Link href="/contact">
+                            <button className="btn-blue faq-btn">Contact us</button>
+                        </Link>
+                        <Link href="/faq">
+                            <button className="btn-lime faq-btn">View more FAQ&apos;s</button>
+                        </Link>
                     </div>
-                    {openIndex === index && (
-                        <div className="faq-answer">
-                            <p>{faq.answer}</p>
-                        </div>
-                    )}
                 </div>
-            ))}
-        </div>
+
+                {/* Accordion */}
+                <div className="faq-list">
+                    {faqs.map((faq, i) => (
+                        <div
+                            key={i}
+                            className={`faq-row ${openIndex === i ? "faq-row-open" : ""}`}
+                            onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                        >
+                            <div className="faq-row-header">
+                                <div className="faq-num">{i + 1}</div>
+                                <span className="faq-q">{faq.question}</span>
+                                <svg
+                                    className="faq-chevron"
+                                    width="16" height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    style={{ transform: openIndex === i ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+                                >
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </div>
+                            {openIndex === i && (
+                                <div className="faq-ans">
+                                    <p>{faq.answer}</p>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
     );
 }
