@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { createIdea } from "@/lib/firestore";
 
 const IconPlus = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -13,6 +15,7 @@ const IconSparkles = () => (
 
 export default function SubmitIdeaPage() {
     const router = useRouter();
+    const { user } = useAuth();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [impact, setImpact] = useState("");
@@ -20,31 +23,30 @@ export default function SubmitIdeaPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) {
+            alert("You must be logged in to submit an idea.");
+            return;
+        }
+
         setIsSubmitting(true);
 
-        const apiURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-
         try {
-            const response = await fetch(`${apiURL}/api/ideas`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ title, description, impact }),
+            await createIdea({
+                title,
+                description,
+                impact,
+                authorId: user.uid,
+                authorName: user.displayName || "Anonymous",
+                status: "Draft"
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                console.log("Submission success:", result);
-                setIsSubmitting(false);
-                router.push("/dashboard/ideas");
-            } else {
-                throw new Error("Failed to submit idea");
-            }
+            console.log("Submission success");
+            setIsSubmitting(false);
+            router.push("/dashboard/ideas");
         } catch (error) {
             console.error("Submission error:", error);
             setIsSubmitting(false);
-            alert("Submission failed. Please check if the backend is running.");
+            alert("Submission failed. Please check your connection.");
         }
     };
 

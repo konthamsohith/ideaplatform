@@ -8,6 +8,7 @@ import {
     User
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
+import { syncUserToFirestore } from "@/lib/firestore";
 
 interface AuthContextType {
     user: User | null;
@@ -23,9 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             setLoading(false);
+            if (currentUser) {
+                await syncUserToFirestore(currentUser);
+            }
         });
 
         return () => unsubscribe();

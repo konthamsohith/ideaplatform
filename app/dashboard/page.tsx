@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { getAllIdeas, Idea } from "@/lib/firestore";
 
 // ── Premium SVG Icons ──────────────────────────────────────────
 const IconPlus = () => (
@@ -22,12 +23,29 @@ const IconRocket = () => (
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const [ideas, setIdeas] = useState<Idea[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchMarketplace() {
+            try {
+                const allIdeas = await getAllIdeas();
+                setIdeas(allIdeas);
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            }
+            setLoading(false);
+        }
+        fetchMarketplace();
+    }, []);
+
+    const userIdeasCount = ideas.filter(i => i.authorId === user?.uid).length;
 
     const stats = [
-        { title: "Problems Dumped", value: "18", icon: <IconList /> },
-        { title: "Collaborators", value: "32", icon: <IconCollab /> },
-        { title: "AI Refined Ideas", value: "11", icon: <IconSparkles /> },
-        { title: "Potential Ventures", value: "4", icon: <IconRocket /> },
+        { title: "Problems Dumped", value: ideas.length.toString(), icon: <IconList /> },
+        { title: "Your Contributions", value: userIdeasCount.toString(), icon: <IconCollab /> },
+        { title: "AI Refinement Active", value: "Enabled", icon: <IconSparkles /> },
+        { title: "Potential Ventures", value: "Beta", icon: <IconRocket /> },
     ];
 
     return (
@@ -66,28 +84,26 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="dashboard-list">
-                        <div className="list-item">
-                            <div className="item-main">
-                                <div className="item-tag">AI & Tech</div>
-                                <h4>AI-powered contract review for SMEs</h4>
-                                <p>Automating legal risk assessment for small businesses...</p>
-                            </div>
-                            <div className="item-meta">
-                                <span>14 collaborators</span>
-                                <button className="btn-ghost">View Details</button>
-                            </div>
-                        </div>
-                        <div className="list-item">
-                            <div className="item-main">
-                                <div className="item-tag" style={{ background: "rgba(187, 244, 81, 0.1)", color: "#749a1d" }}>Social Impact</div>
-                                <h4>Real-time multilingual transcription</h4>
-                                <p>Solving live event accessibility for diverse audiences...</p>
-                            </div>
-                            <div className="item-meta">
-                                <span>21 collaborators</span>
-                                <button className="btn-ghost">View Details</button>
-                            </div>
-                        </div>
+                        {loading ? (
+                            <p style={{ padding: "1rem", color: "#6b7280" }}>Fetching latest ideas...</p>
+                        ) : (
+                            ideas.slice(0, 5).map((idea, index) => (
+                                <div key={idea.id || index} className="list-item">
+                                    <div className="item-main">
+                                        <div className="item-tag">{idea.status}</div>
+                                        <h4>{idea.title}</h4>
+                                        <p>{idea.description.substring(0, 100)}...</p>
+                                    </div>
+                                    <div className="item-meta">
+                                        <span>{idea.collaborators} collaborators</span>
+                                        <button className="btn-ghost">View Details</button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                        {!loading && ideas.length === 0 && (
+                            <p style={{ padding: "1rem", color: "#6b7280" }}>No ideas found. Be the first to dump a problem!</p>
+                        )}
                     </div>
                 </div>
 
