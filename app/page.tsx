@@ -18,7 +18,7 @@ export default function Home() {
 
                 <h1 className="hero-title">
                     Master Building & <br />
-                    Startups with Idea Platform
+                    Startups with TWONNECT
                 </h1>
 
                 <p className="hero-subtitle">
@@ -95,7 +95,7 @@ export default function Home() {
                             <p>&quot;95% of validated problems secure builder teams or get freelance grants within 6 months.&quot;</p>
                             <div className="author-info">
                                 <strong>Selena Arthur</strong>
-                                <span>Lead Investor at Avanza</span>
+                                <span>Lead Investor at TWONNECT</span>
                             </div>
                         </div>
                     </div>

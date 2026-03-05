@@ -16,7 +16,7 @@ const posts = [
         slug: "ai-refinement-guide",
         tag: "AI & Tools",
         date: "Feb 14, 2026",
-        title: "Inside Idea Platform's AI Refinement: How It Turns Raw Ideas Into Product Specs",
+        title: "Inside TWONNECT's AI Refinement: How It Turns Raw Ideas Into Product Specs",
         excerpt: "Our AI agent doesn't just clean up your writing — it asks the right questions, identifies gaps, and produces a structured requirements doc builders can act on immediately.",
         readTime: "7 min read",
         accent: "#bbf451",
@@ -34,7 +34,7 @@ const posts = [
         slug: "investor-hub-launch",
         tag: "Fundraising",
         date: "Jan 30, 2026",
-        title: "Investor Hub is Live: How Startups Are Connecting With Capital on Idea Platform",
+        title: "Investor Hub is Live: How Startups Are Connecting With Capital on TWONNECT",
         excerpt: "We launched Investor Hub to bridge the gap between validated problems and the investors who want to back them early. Here's what we learned in the first 30 days.",
         readTime: "6 min read",
         accent: "#000000",
@@ -53,15 +53,15 @@ const posts = [
         tag: "Build",
         date: "Jan 15, 2026",
         title: "From Validated Problem to Working MVP in 6 Weeks: A Builder's Playbook",
-        excerpt: "Six weeks. One validated problem. Zero VC backing. Here's how a team of three shipped a working MVP and got their first paying customer using Idea Platform.",
+        excerpt: "Six weeks. One validated problem. Zero VC backing. Here's how a team of three shipped a working MVP and got their first paying customer using TWONNECT.",
         readTime: "10 min read",
         accent: "#bbf451",
     },
 ];
 
 export const metadata = {
-    title: "Blog — Idea Platform",
-    description: "Insights on startup validation, building products, and community-driven growth from the Idea Platform team.",
+    title: "Blog — TWONNECT",
+    description: "Insights on startup validation, building products, and community-driven growth from the TWONNECT team.",
 };
 
 export default function BlogPage() {
@@ -72,7 +72,7 @@ export default function BlogPage() {
                 <div className="blog-hero-inner container">
                     <div className="blog-label">
                         <span className="blog-label-dot" />
-                        Latest from Idea Platform
+                        Latest from TWONNECT
                     </div>
                     <h1 className="blog-hero-title">Ideas Worth Reading</h1>
                     <p className="blog-hero-sub">

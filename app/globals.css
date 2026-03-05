@@ -1,7 +1,44 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&family=Montserrat:wght@800&display=swap');
+
+/* Stylized Logo - Final Pure Geometric Version */
+.twonnect-logo {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  /* Extra Bold for the Neo-Geometric block style */
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  letter-spacing: -0.075em;
+  /* Ultra-tight kerning */
+  gap: 0;
+  user-select: none;
+  font-size: 1.75rem;
+  line-height: 1;
+  transform: scaleX(0.96);
+  /* Subtle compression for the Brandmark look */
+}
+
+.logo-char-e {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 0.72em;
+  /* Slightly taller to ensure distinct gaps */
+  width: 0.62em;
+  margin: 0 0.02em 0 0.04em;
+}
+
+.logo-e-bar {
+  height: 0.16em;
+  /* Slightly thinner bars to allow more breathing room */
+  background: currentColor;
+  width: 100%;
+  border-radius: 0;
+  /* Square ends as per "Neo Geometric" image */
+}
 
 :root {
-  /* Idea Platform Design System */
+  /* TWONNECT Design System */
   --background: #f0f7ff;
   --foreground: #000000;
   --primary: #007aff;
@@ -169,9 +206,11 @@ a {
 }
 
 .navbar-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
   font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  /* Explicit size for consistency */
   color: var(--foreground);
 }
 

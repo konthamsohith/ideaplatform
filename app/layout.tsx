@@ -2,7 +2,7 @@ import "./globals.css";
 import "./landing.css";
 
 export const metadata = {
-    title: "Idea Platform",
+    title: "TWONNECT",
     description: "A platform bridging real-world problems with actionable startup solutions.",
 };
 

@@ -5,8 +5,8 @@ import Link from "next/link";
 
 const faqs = [
     {
-        question: "What is Idea Platform?",
-        answer: "Idea Platform is a hub where founders, builders, and investors collaborate on real-world validated problems. You can submit ideas, find co-builders, and get AI-powered refinement to sharpen your concept.",
+        question: "What is TWONNECT?",
+        answer: "TWONNECT is a hub where founders, builders, and investors collaborate on real-world validated problems. You can submit ideas, find co-builders, and get AI-powered refinement to sharpen your concept.",
     },
     {
         question: "Can I use validated problems to build client projects?",
@@ -25,7 +25,7 @@ const faqs = [
         answer: "New validated problems are added every week across categories like AI & Tech, Social Impact, and Open Source. Subscribe to our newsletter to get first access.",
     },
     {
-        question: "What makes Idea Platform different from other platforms?",
+        question: "What makes TWONNECT different from other platforms?",
         answer: "We focus exclusively on real-world, vetted problems—not theoretical exercises. Every listing has been validated for market relevance so you're always building something that matters.",
     },
 ];

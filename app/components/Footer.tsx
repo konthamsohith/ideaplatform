@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Logo from "./Logo";
 
 export default function Footer() {
     const pathname = usePathname();
@@ -14,11 +15,7 @@ export default function Footer() {
                 {/* Brand col */}
                 <div className="ip-footer-brand">
                     <div className="ip-footer-logo">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10" stroke="#007aff" strokeWidth="2.2" />
-                            <path d="M8 12h8M12 8v8" stroke="#007aff" strokeWidth="2.2" strokeLinecap="round" />
-                        </svg>
-                        <span>Idea Platform</span>
+                        <Logo style={{ fontSize: "1.2rem" }} />
                     </div>
                     <p className="ip-footer-tagline">
                         All-in-one hub for founders &amp; builders.{" "}
@@ -92,7 +89,7 @@ export default function Footer() {
 
             {/* ── Bottom bar ──────────────────────────────── */}
             <div className="ip-footer-bottom">
-                <span className="ip-footer-copy">&copy; Copyright Idea Platform {new Date().getFullYear()}. All rights reserved.</span>
+                <span className="ip-footer-copy">&copy; Copyright TWONNECT {new Date().getFullYear()}. All rights reserved.</span>
             </div>
         </footer>
     );

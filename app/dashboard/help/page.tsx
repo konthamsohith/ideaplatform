@@ -7,7 +7,7 @@ export default function HelpPage() {
         <div className="dashboard-page">
             <header className="dashboard-header">
                 <h1>Get Help</h1>
-                <p>Find answers to common questions about the Idea Platform.</p>
+                <p>Find answers to common questions about TWONNECT.</p>
             </header>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
@@ -19,8 +19,8 @@ export default function HelpPage() {
                             <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>Click the &quot;Submit New Idea&quot; button in the sidebar and fill out the problem form.</p>
                         </div>
                         <div>
-                            <h4 style={{ fontSize: "0.95rem", fontWeight: 700 }}>Is IdeaAI free to use?</h4>
-                            <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>Yes, for early adopters, IdeaAI refinement is included in the platform experience.</p>
+                            <h4 style={{ fontSize: "0.95rem", fontWeight: 700 }}>Is TWONNECT AI free to use?</h4>
+                            <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>Yes, for early adopters, TWONNECT AI refinement is included in the platform experience.</p>
                         </div>
                     </div>
                 </div>

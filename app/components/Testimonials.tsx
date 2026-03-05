@@ -7,21 +7,21 @@ const testimonials = [
             name: "Arjun Mehta",
             handle: "@arjunbuilds",
             avatar: "#3b82f6",
-            text: "I joined Idea Platform with a half-baked concept, and honestly, I thought it would go nowhere. But the way problems are broken down into actionable steps made me stick with it. Within a month, I launched my first MVP.",
+            text: "I joined TWONNECT with a half-baked concept, and honestly, I thought it would go nowhere. But the way problems are broken down into actionable steps made me stick with it. Within a month, I launched my first MVP.",
             highlights: ["half-baked concept", "launched my first MVP"],
         },
         {
             name: "Priya Nair",
             handle: "@designwithpriya",
             avatar: "#f97316",
-            text: "The community side of Idea Platform deserves its own shoutout. The feedback on ideas is not just academic — it's practical and usable. I applied what I learned to a client's brand and received incredible traction. Every submission directly translates to real work.",
+            text: "The community side of TWONNECT deserves its own shoutout. The feedback on ideas is not just academic — it's practical and usable. I applied what I learned to a client's brand and received incredible traction. Every submission directly translates to real work.",
             highlights: ["incredible traction"],
         },
         {
             name: "Ravi Shankar",
             handle: "@ravicreates",
             avatar: "#a855f7",
-            text: "I've explored other platforms before, but they always felt either too broad or too niche. Idea Platform is different. Each problem builds on the previous one, and the progress feels natural, structured, and deeply motivating.",
+            text: "I've explored other platforms before, but they always felt either too broad or too niche. TWONNECT is different. Each problem builds on the previous one, and the progress feels natural, structured, and deeply motivating.",
             highlights: [],
         },
     ],
@@ -31,7 +31,7 @@ const testimonials = [
             name: "Sneha Kapoor",
             handle: "@sneha_dev",
             avatar: "#22c55e",
-            text: "Idea Platform doesn't just throw ideas at you. Every problem is explained with full context, and then you immediately apply it to real projects. I went from watching tutorials aimlessly to actually building portfolio-worthy products.",
+            text: "TWONNECT doesn't just throw ideas at you. Every problem is explained with full context, and then you immediately apply it to real projects. I went from watching tutorials aimlessly to actually building portfolio-worthy products.",
             highlights: [],
         },
         {
@@ -45,7 +45,7 @@ const testimonials = [
             name: "Fatima Sheikh",
             handle: "@fatimacodes",
             avatar: "#8b5cf6",
-            text: "What surprised me most about Idea Platform was the support system. The AI refinement tool actually works — I got detailed feedback at 2 AM when I was stuck on a product framing issue. It doesn't feel like you're building alone; it feels like someone's always got your back, which keeps you moving forward.",
+            text: "What surprised me most about TWONNECT was the support system. The AI refinement tool actually works — I got detailed feedback at 2 AM when I was stuck on a product framing issue. It doesn't feel like you're building alone; it feels like someone's always got your back, which keeps you moving forward.",
             highlights: ["AI refinement tool", "detailed feedback"],
         },
     ],
@@ -55,21 +55,21 @@ const testimonials = [
             name: "Ananya Roy",
             handle: "@uxananya",
             avatar: "#ec4899",
-            text: "As a designer shifting into product development, I struggled with market research. Idea Platform finally gave me the clarity I needed. This is hands-on problem solving at its best.",
+            text: "As a designer shifting into product development, I struggled with market research. TWONNECT finally gave me the clarity I needed. This is hands-on problem solving at its best.",
             highlights: [],
         },
         {
             name: "Dev Rajput",
             handle: "@dev_js",
             avatar: "#14b8a6",
-            text: "I've been building for about a year, but I never really felt confident until I found Idea Platform. The validated problems and structured thinking were game-changers. I shipped a feature for a client last month and actually got paid for it. For me, this isn't just ideation — it's career growth.",
+            text: "I've been building for about a year, but I never really felt confident until I found TWONNECT. The validated problems and structured thinking were game-changers. I shipped a feature for a client last month and actually got paid for it. For me, this isn't just ideation — it's career growth.",
             highlights: ["career growth"],
         },
         {
             name: "Nikhil Torres",
             handle: "@nikhildev",
             avatar: "#f59e0b",
-            text: "For years I told myself startups weren't for me. But Idea Platform completely changed that mindset. The way the community simplifies difficult topics is remarkable. I started with small wins, and now I'm building full products, something I never imagined doing. It's not just a platform.",
+            text: "For years I told myself startups weren't for me. But TWONNECT completely changed that mindset. The way the community simplifies difficult topics is remarkable. I started with small wins, and now I'm building full products, something I never imagined doing. It's not just a platform.",
             highlights: ["I'm building full products"],
         },
     ],
@@ -97,7 +97,7 @@ export default function Testimonials() {
             <div className="tm-header">
                 <h2 className="tm-title">What Our Builders Say</h2>
                 <p className="tm-subtitle">
-                    Join thousands of founders and builders who are validating and launching with Idea Platform
+                    Join thousands of founders and builders who are validating and launching with TWONNECT
                 </p>
             </div>
 

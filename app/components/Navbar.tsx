@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { usePathname, useRouter } from "next/navigation";
+import Logo from "./Logo";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
@@ -40,8 +41,7 @@ export default function Navbar() {
             <nav className={`navbar ${scrolled ? "navbar-scrolled" : ""}`}>
                 <div className="navbar-container">
                     <Link href="/" className="navbar-logo">
-                        <span style={{ color: "var(--blue)" }}>Idea</span>
-                        <span style={{ color: "var(--foreground)" }}>Platform</span>
+                        <Logo />
                     </Link>
                     <div className="navbar-links">
                         <Link href="/#why-build">About</Link>

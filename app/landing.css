@@ -486,7 +486,7 @@
     }
 }
 
-/* ── Featured Problems Section (Idea Platform Rebuild) ──────────────── */
+/* ── Featured Problems Section (TWONNECT Rebuild) ──────────────── */
 .fp-section {
     margin-top: 8rem;
     padding-bottom: 4rem;
@@ -702,7 +702,7 @@
     color: #9ca3af;
 }
 
-/* CTA button - Idea Platform Style */
+/* CTA button - TWONNECT Style */
 .fp-card-footer {
     padding: 0 1.5rem 1.5rem;
     display: flex;
@@ -1951,11 +1951,10 @@
 .sidebar-logo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 1.25rem;
-    font-weight: 800;
     text-decoration: none;
-    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    /* Explicit size for consistency */
+    margin-bottom: 2.5rem;
 }
 
 .btn-new {
@@ -2277,7 +2276,7 @@
     }
 }
 
-/* ── Idea Platform Specialized Dashboard ─────────────────────── */
+/* ── TWONNECT Specialized Dashboard ─────────────────────── */
 .dashboard-list {
     display: flex;
     flex-direction: column;
