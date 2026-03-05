@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./landing.css";
 
 export const metadata = {
     title: "Idea Platform",

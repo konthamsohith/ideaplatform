@@ -60,7 +60,7 @@ export default function GetStarted() {
                             </div>
                             <h3>{role.title}</h3>
                             <p>{role.description}</p>
-                            <Link href="/" className="role-btn">
+                            <Link href="/dashboard" className="role-btn">
                                 Select {role.title}
                             </Link>
                         </div>

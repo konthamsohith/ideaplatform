@@ -1,5 +1,4 @@
 import Link from "next/link";
-import './landing.css';
 import HeroBg from "./components/HeroBg";
 import FeaturedProblems from "./components/FeaturedProblems";
 import WhyBuild from "./components/WhyBuild";

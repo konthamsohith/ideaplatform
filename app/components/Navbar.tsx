@@ -3,11 +3,19 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [progress, setProgress] = useState(0);
     const { user, logout } = useAuth();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push("/");
+    };
 
     useEffect(() => {
         const onScroll = () => {
@@ -21,6 +29,8 @@ export default function Navbar() {
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
+
+    if (pathname?.startsWith("/dashboard")) return null;
 
     return (
         <>
@@ -42,7 +52,7 @@ export default function Navbar() {
                         {user ? (
                             <div className="nav-user-profile">
                                 <img src={user.photoURL || ""} alt={user.displayName || ""} className="nav-avatar" />
-                                <button className="btn-ghost" onClick={() => logout()}>Sign Out</button>
+                                <button className="btn-ghost" onClick={handleLogout}>Sign Out</button>
                             </div>
                         ) : (
                             <>

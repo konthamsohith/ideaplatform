@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function NewsletterCTA() {
+    const pathname = usePathname();
     const [email, setEmail] = useState("");
     const [submitted, setSubmitted] = useState(false);
+
+    if (pathname?.startsWith("/dashboard")) return null;
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
