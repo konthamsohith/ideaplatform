@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import NewsletterCTA from "./components/NewsletterCTA";
 import ScrollReveal from "./components/ScrollReveal";
+import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout({
     children,
@@ -18,11 +19,13 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                <ScrollReveal />
-                <Navbar />
-                {children}
-                <NewsletterCTA />
-                <Footer />
+                <AuthProvider>
+                    <ScrollReveal />
+                    <Navbar />
+                    {children}
+                    <NewsletterCTA />
+                    <Footer />
+                </AuthProvider>
             </body>
         </html>
     );

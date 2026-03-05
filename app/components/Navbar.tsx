@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [progress, setProgress] = useState(0);
+    const { user, logout } = useAuth();
 
     useEffect(() => {
         const onScroll = () => {
@@ -37,8 +39,21 @@ export default function Navbar() {
                         <Link href="/#faq-section">FAQ</Link>
                     </div>
                     <div className="navbar-actions">
-                        <button className="btn-blue" style={{ marginRight: "0.5rem" }}>Sign In</button>
-                        <button className="btn-lime">Get Started</button>
+                        {user ? (
+                            <div className="nav-user-profile">
+                                <img src={user.photoURL || ""} alt={user.displayName || ""} className="nav-avatar" />
+                                <button className="btn-ghost" onClick={() => logout()}>Sign Out</button>
+                            </div>
+                        ) : (
+                            <>
+                                <Link href="/signin">
+                                    <button className="btn-blue" style={{ marginRight: "0.5rem" }}>Sign In</button>
+                                </Link>
+                                <Link href="/get-started">
+                                    <button className="btn-lime">Get Started</button>
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </nav>
