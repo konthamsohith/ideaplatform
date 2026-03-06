@@ -3,8 +3,8 @@ export default function WhyBuild() {
         <section className="wb-section container">
             {/* Header */}
             <div className="wb-header">
-                <h2 className="wb-title">Why Build with TWONNECT?</h2>
-                <p className="wb-subtitle">Crafted to take you from idea to launch at your own pace</p>
+                <h2 className="wb-title">Why Build Startups with TWONNECT?</h2>
+                <p className="wb-subtitle">The platform designed to take you from problem statement to Y Combinator launch.</p>
             </div>
 
             {/* Bento grid */}

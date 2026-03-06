@@ -24,6 +24,7 @@ export interface Idea {
  * Fetches a user profile from Supabase.
  */
 export const getUserProfile = async (uid: string) => {
+    if (!supabase) return null;
     try {
         const { data, error } = await supabase
             .from("profiles")
@@ -43,6 +44,7 @@ export const getUserProfile = async (uid: string) => {
  * Updates a user profile in Supabase.
  */
 export const updateUserProfile = async (uid: string, data: Partial<Profile>) => {
+    if (!supabase) return;
     try {
         const { error } = await supabase
             .from("profiles")
@@ -60,6 +62,7 @@ export const updateUserProfile = async (uid: string, data: Partial<Profile>) => 
  * Creates a new idea in the 'ideas' table.
  */
 export const createIdea = async (ideaData: Omit<Idea, "id" | "created_at" | "collaborators">) => {
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
         const { data, error } = await supabase
             .from("ideas")
@@ -85,6 +88,7 @@ export const createIdea = async (ideaData: Omit<Idea, "id" | "created_at" | "col
  * Fetches all ideas for the marketplace.
  */
 export const getAllIdeas = async () => {
+    if (!supabase) return [];
     try {
         const { data, error } = await supabase
             .from("ideas")
@@ -103,6 +107,7 @@ export const getAllIdeas = async () => {
  * Fetches ideas submitted by a specific user.
  */
 export const getUserIdeas = async (uid: string) => {
+    if (!supabase) return [];
     try {
         const { data, error } = await supabase
             .from("ideas")

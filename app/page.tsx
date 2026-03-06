@@ -6,39 +6,58 @@ import Testimonials from "./components/Testimonials";
 import FAQSection from "./components/FAQ";
 
 export default function Home() {
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "TWONNECT",
+        "url": "https://twonnect.com",
+        "logo": "https://twonnect.com/assests/TWONNECTcircle.png",
+        "description": "Connecting early-stage startup founders with validated problem statements and angel investors to build Y Combinator-ready companies.",
+        "sameAs": [
+            "https://twitter.com/twonnect",
+            "https://linkedin.com/company/twonnect"
+        ]
+    };
+
     return (
         <main className="avanza-home">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <HeroBg />
 
             <section className="avanza-hero text-center">
                 <div className="badge-pill mb-4 mx-auto">
                     <span className="badge-new">NEW</span>
-                    <span>AI Refinement now available</span>
+                    <span>AI-Powered Startup Refinement</span>
                 </div>
 
                 <h1 className="hero-title">
-                    Master Building & <br />
-                    Startups with TWONNECT
+                    Master Startup Building & <br />
+                    Connect with Angel Investors
                 </h1>
 
                 <p className="hero-subtitle">
-                    Collaborate, refine, and build in one place — practical, modern, and built to help you advance and scale your solutions.
+                    The bridge between real-world problem statements and Y Combinator-ready solutions.
+                    Collaborate, validate, and scale with TWONNECT.
                 </p>
 
                 <div className="hero-actions">
                     <Link href="/explore"><button className="btn-black btn-lg">Explore Problems</button></Link>
-                    <Link href="/dump"><button className="btn-lime btn-lg">Start Building Now</button></Link>
+                    <Link href="/dump"><button className="btn-lime btn-lg">Submit Problem Statement</button></Link>
                 </div>
             </section>
 
             <section className="bento-container container">
+                <h2 className="sr-only">Platform Benefits and Success Metrics</h2>
                 <div className="bento-grid">
 
                     {/* Card 1: Platform Highlights */}
                     <div className="bento-card bento-highlights">
                         <div className="card-header-clean">
-                            <h3>Platform Highlights</h3>
-                            <p>A sneak peek into the skills and traction you'll gain inside.</p>
+                            <h3>Startup Ecosystem Highlights</h3>
+                            <p>Direct access to validated market gaps and investor-ready metrics.</p>
                         </div>
                         <div className="highlights-mosaic">
                             <div className="mosaic-box box-1">
@@ -66,7 +85,7 @@ export default function Home() {
                             <div className="stat-flex">
                                 <div>
                                     <h3>4,200+</h3>
-                                    <p>Active problems listed</p>
+                                    <p>Validated problem statements</p>
                                 </div>
                                 <div className="avatars-group">
                                     <div className="avatar bg-blue"></div>
@@ -81,7 +100,7 @@ export default function Home() {
                             <div className="image-bg-placeholder">
                                 <div className="stat-overlay">
                                     <h3>$12M+</h3>
-                                    <p>Capital deployed</p>
+                                    <p>Angel investment secured</p>
                                 </div>
                             </div>
                         </div>
@@ -89,13 +108,13 @@ export default function Home() {
 
                     {/* Card 4: Success Stories */}
                     <div className="bento-card bento-success">
-                        <h3>Success Stories</h3>
+                        <h3>Founder Success Stories</h3>
                         <div className="success-image-placeholder"></div>
                         <div className="success-quote">
-                            <p>&quot;95% of validated problems secure builder teams or get freelance grants within 6 months.&quot;</p>
+                            <p>&quot;95% of our validated startup ideas secure co-founders or angel investment within 6 months.&quot;</p>
                             <div className="author-info">
                                 <strong>Selena Arthur</strong>
-                                <span>Lead Investor at TWONNECT</span>
+                                <span>Lead Startup Mentor at TWONNECT</span>
                             </div>
                         </div>
                     </div>
@@ -103,11 +122,11 @@ export default function Home() {
                     {/* Card 5: Affordable Learning */}
                     <div className="bento-card bento-affordable">
                         <div className="affordable-text">
-                            <h3>Open Collaboration</h3>
-                            <p>High-quality verified statements at a fraction of traditional enterprise consulting cost.</p>
+                            <h3>Y Combinator Preparation</h3>
+                            <p>Build the specific traction and validation required for top-tier accelerators like YC.</p>
                         </div>
                         <div className="affordable-btn">
-                            <button className="btn-lime">Contact us</button>
+                            <button className="btn-lime">Contact Mentor</button>
                         </div>
                     </div>
 
@@ -115,9 +134,15 @@ export default function Home() {
             </section>
 
             <FeaturedProblems />
-            <div id="why-build"><WhyBuild /></div>
+            <div id="why-build">
+                <h2 className="sr-only">Why Build on TWONNECT?</h2>
+                <WhyBuild />
+            </div>
             <Testimonials />
-            <div id="faq-section"><FAQSection /></div>
+            <div id="faq-section">
+                <h2 className="sr-only">Frequently Asked Questions</h2>
+                <FAQSection />
+            </div>
         </main>
     );
 }

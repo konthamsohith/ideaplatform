@@ -60,8 +60,9 @@ const posts = [
 ];
 
 export const metadata = {
-    title: "Blog — TWONNECT",
-    description: "Insights on startup validation, building products, and community-driven growth from the TWONNECT team.",
+    title: "Startup & Investor Insights Blog",
+    description: "Expert insights on startup validation, pitching to angel investors, and building Y Combinator-ready products. Read the latest from the TWONNECT team.",
+    keywords: ["angel investment tips", "startup validation guide", "y combinator preparation", "founder stories", "pitching to investors"],
 };
 
 export default function BlogPage() {
@@ -72,11 +73,11 @@ export default function BlogPage() {
                 <div className="blog-hero-inner container">
                     <div className="blog-label">
                         <span className="blog-label-dot" />
-                        Latest from TWONNECT
+                        Startup & Investor Insights
                     </div>
-                    <h1 className="blog-hero-title">Ideas Worth Reading</h1>
+                    <h1 className="blog-hero-title">Validated Ideas & Investor Insights</h1>
                     <p className="blog-hero-sub">
-                        Insights on startup validation, building with community, and shipping things that matter.
+                        Master the art of startup validation, learn how to attract angel investors, and build products the community actually wants.
                     </p>
                 </div>
             </section>

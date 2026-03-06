@@ -77,7 +77,7 @@ export default function FAQSection() {
                             onClick={() => setOpenIndex(openIndex === i ? null : i)}
                         >
                             <div className="faq2-item-header">
-                                <span className="faq2-item-q">{faq.question}</span>
+                                <h3 className="faq2-item-q" style={{ fontSize: 'inherit', fontWeight: 'inherit', margin: 0 }}>{faq.question}</h3>
                                 <span className="faq2-item-icon">
                                     {openIndex === i ? "−" : "+"}
                                 </span>

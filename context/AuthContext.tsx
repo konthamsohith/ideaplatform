@@ -20,12 +20,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!supabase) {
+            setLoading(false);
+            return;
+        }
+
         // Check active sessions and sets the user
         const setData = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error) throw error;
-            setUser(session?.user ?? null);
-            setLoading(false);
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) throw error;
+                setUser(session?.user ?? null);
+            } catch (err) {
+                console.warn("Session fetch failed:", err);
+            } finally {
+                setLoading(false);
+            }
         };
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -41,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const loginWithGoogle = async () => {
+        if (!supabase) return;
         try {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
@@ -55,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signInWithEmail = async (email: string, password: string) => {
+        if (!supabase) return { error: new Error("Supabase not initialized") };
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password,
@@ -63,19 +75,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+        if (!supabase) return { error: new Error("Supabase not initialized") };
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
                 data: {
                     full_name: fullName,
-                }
+                },
+                emailRedirectTo: window.location.origin + "/dashboard"
             }
         });
         return { error };
     };
 
     const logout = async () => {
+        if (!supabase) return;
         try {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
