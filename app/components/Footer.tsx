@@ -53,19 +53,9 @@ export default function Footer() {
                         <h4>Sitemap</h4>
                         <ul>
                             <li><Link href="/">Home</Link></li>
-                            <li><Link href="/explore">Explore</Link></li>
-                            <li><Link href="/about">About Us</Link></li>
+                            <li><Link href="/#why-build">About Us</Link></li>
                             <li><Link href="/blog">Blog</Link></li>
                             <li><Link href="/contact">Contact Us</Link></li>
-                        </ul>
-                    </div>
-                    <div className="ip-footer-col">
-                        <h4>Build</h4>
-                        <ul>
-                            <li><Link href="/explore">All Problems</Link></li>
-                            <li><Link href="/dump">Submit Idea</Link></li>
-                            <li><Link href="/explore?tag=ai">AI &amp; Tech</Link></li>
-                            <li><Link href="/explore?tag=free">Open Source</Link></li>
                         </ul>
                     </div>
                     <div className="ip-footer-col">

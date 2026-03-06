@@ -35,8 +35,25 @@ const avatarColors = ["#3b82f6", "#f97316", "#a855f7"];
 export default function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+    const faqJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": faqs.map(faq => ({
+            "@type": "Question",
+            "name": faq.question,
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+            }
+        }))
+    };
+
     return (
         <section className="faq2-section">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+            />
             <div className="faq2-inner container">
 
                 {/* ── Left column ── */}
@@ -57,12 +74,12 @@ export default function FAQSection() {
                             <Link href="/contact" className="faq2-contact-link">Contact Us</Link>
                             {", "}We are happy to help you
                         </p>
-                        <div className="faq2-avatars">
+                        <div className="faq2-avatars" aria-hidden="true">
                             {avatarColors.map((c, i) => (
                                 <div key={i} className="faq2-avatar" style={{ background: c, zIndex: avatarColors.length - i }} />
                             ))}
                         </div>
-                        <Link href="/explore">
+                        <Link href="/signin">
                             <button className="faq2-cta">Start Building Now</button>
                         </Link>
                     </div>

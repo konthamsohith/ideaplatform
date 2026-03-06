@@ -60,9 +60,9 @@ const posts = [
 ];
 
 export const metadata = {
-    title: "Startup & Investor Insights Blog",
-    description: "Expert insights on startup validation, pitching to angel investors, and building Y Combinator-ready products. Read the latest from the TWONNECT team.",
-    keywords: ["angel investment tips", "startup validation guide", "y combinator preparation", "founder stories", "pitching to investors"],
+    title: "Startup & Investor Insights | YC Preparation & Validation Blog",
+    description: "Expert insights on startup validation, pitching to angel investors, and building Y Combinator-ready products. Read the latest guidance from founders and investors.",
+    keywords: ["angel investment guide", "startup validation methods", "y combinator checklist", "YC application tips", "high-traction startup building", "investor networking"],
 };
 
 export default function BlogPage() {

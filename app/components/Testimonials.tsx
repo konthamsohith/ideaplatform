@@ -135,8 +135,8 @@ export default function Testimonials() {
 
             {/* CTA */}
             <div className="tm-cta">
-                <Link href="/explore">
-                    <button className="btn-blue tm-cta-btn">See All Problems</button>
+                <Link href="/signin">
+                    <button className="btn-blue tm-cta-btn">Start Building Now</button>
                 </Link>
             </div>
         </section>

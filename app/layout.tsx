@@ -3,11 +3,11 @@ import "./landing.css";
 
 export const metadata = {
     title: {
-        default: "TWONNECT | Bridging Real-World Problems with Startup Solutions",
+        default: "TWONNECT | Get YC-Ready with Validated Startup Ideas & Angel Investors",
         template: "%s | TWONNECT"
     },
-    description: "TWONNECT is the premier platform for bridging real-world problems with actionable startup solutions. Find validated problem statements, connect with angel investors, and build your next Y Combinator-ready startup.",
-    keywords: ["angel investors", "y combinator", "startup ideas", "problem validation", "find co-founders", "startup solutions", "venture capital", "entrepreneurship", "validated problems"],
+    description: "TWONNECT bridges real-world market gaps with YC-ready startup solutions. Access validated problem statements, connect with angel investors, and build high-impact companies.",
+    keywords: ["angel investors", "y combinator", "startup validation", "validated startup ideas", "yc ready", "co-founder matching", "venture capital funding", "startup ecosystem", "market gap analysis"],
     authors: [{ name: "TWONNECT Team" }],
     creator: "TWONNECT",
     publisher: "TWONNECT",
@@ -21,8 +21,8 @@ export const metadata = {
         canonical: "/",
     },
     openGraph: {
-        title: "TWONNECT | Bridging Real-World Problems with Startup Solutions",
-        description: "The platform where real-world problems meet actionable startup solutions. Connect with builders and investors.",
+        title: "TWONNECT | Validated Startup Ideas for Founders & Investors",
+        description: "The bridge between real-world market gaps and YC-ready startup solutions. Connect with angel investors and builders.",
         url: "https://twonnect.me",
         siteName: "TWONNECT",
         images: [
@@ -30,7 +30,7 @@ export const metadata = {
                 url: "/assests/TWONNECTcircle.png",
                 width: 800,
                 height: 800,
-                alt: "TWONNECT Logo",
+                alt: "TWONNECT - Validated Startup Mission",
             },
         ],
         locale: "en_US",
@@ -38,8 +38,8 @@ export const metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "TWONNECT | Bridging Real-World Problems with Startup Solutions",
-        description: "Connect validated problems with startup solutions. The bridge for builders and angel investors.",
+        title: "TWONNECT | Validated Startup Ideas & Angel Investors",
+        description: "Build YC-ready startups with validated market gaps. The definitive bridge for founders and angel investors.",
         images: ["/assests/TWONNECTcircle.png"],
     },
     icons: {

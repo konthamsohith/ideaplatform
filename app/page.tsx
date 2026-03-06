@@ -9,6 +9,7 @@ import FeaturedProblems from "./components/FeaturedProblems";
 import WhyBuild from "./components/WhyBuild";
 import Testimonials from "./components/Testimonials";
 import FAQSection from "./components/FAQ";
+import SmoothScroll from "./components/SmoothScroll";
 
 export default function Home() {
     const { user, loading } = useAuth();
@@ -19,6 +20,11 @@ export default function Home() {
             router.push("/dashboard");
         }
     }, [user, loading, router]);
+
+    useEffect(() => {
+        document.documentElement.classList.add('hide-scrollbar');
+        return () => document.documentElement.classList.remove('hide-scrollbar');
+    }, []);
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -29,7 +35,12 @@ export default function Home() {
         "sameAs": [
             "https://twitter.com/twonnect",
             "https://linkedin.com/company/twonnect"
-        ]
+        ],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "url": "https://twonnect.me/contact"
+        }
     };
 
     if (loading || user) {
@@ -43,6 +54,7 @@ export default function Home() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <HeroBg />
+            <SmoothScroll />
 
             <section className="avanza-hero text-center">
                 <div className="badge-pill mb-4 mx-auto">
@@ -51,8 +63,8 @@ export default function Home() {
                 </div>
 
                 <h1 className="hero-title">
-                    Master Startup Building & <br />
-                    Connect with Angel Investors
+                    Build YC-Ready Startups & <br />
+                    Secure Angel Investment
                 </h1>
 
                 <p className="hero-subtitle">
@@ -60,10 +72,6 @@ export default function Home() {
                     Collaborate, validate, and scale with TWONNECT.
                 </p>
 
-                <div className="hero-actions">
-                    <Link href="/explore"><button className="btn-black btn-lg">Explore Problems</button></Link>
-                    <Link href="/dump"><button className="btn-lime btn-lg">Submit Problem Statement</button></Link>
-                </div>
             </section>
 
             <section className="bento-container container">
@@ -152,7 +160,6 @@ export default function Home() {
 
             <FeaturedProblems />
             <div id="why-build">
-                <h2 className="sr-only">Why Build on TWONNECT?</h2>
                 <WhyBuild />
             </div>
             <Testimonials />

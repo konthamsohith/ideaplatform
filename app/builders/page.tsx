@@ -5,9 +5,9 @@ import { Button } from '../components/Button';
 import './builders.css';
 
 export const metadata = {
-    title: "Find Co-founders & Startup Collaborators",
-    description: "Browse our directory of elite builders, engineers, and designers. Find your next Y Combinator co-founder and build validated startup solutions together.",
-    keywords: ["find co-founders", "startup collaborators", "y combinator teams", "build a startup", "hire developers for equity"],
+    title: "Find Co-founders & Expert Builders | YC Team Matching",
+    description: "Browse our directory of elite builders, engineers, and designers. Find your next Y Combinator co-founder and build validated startup solutions alongside technical experts.",
+    keywords: ["find co-founders for startups", "YC team matching", "technical startup collaborators", "startup founder directory", "build YC startup", "early stage co-founder"],
 };
 
 export default function BuildersPage() {

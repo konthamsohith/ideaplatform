@@ -3,14 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 
-const tabs = ["AI & Tech", "Social Impact", "Free to Build"] as const;
+const tabs = ["Validated Opportunities"] as const;
 type Tab = typeof tabs[number];
 
 const problems: Record<Tab, { id: number; tag: string; level: string; title: string; added: string; builders: number; hours: string; color: string }[]> = {
-    "AI & Tech": [
+    "Validated Opportunities": [
         {
             id: 1,
-            tag: "AI & Tech",
+            tag: "Validated",
             level: "Advanced",
             title: "Build an AI-powered contract review tool for SMEs",
             added: "12/02/2025",
@@ -20,39 +20,7 @@ const problems: Record<Tab, { id: number; tag: string; level: string; title: str
         },
         {
             id: 2,
-            tag: "AI & Tech",
-            level: "Intermediate",
-            title: "Automated bug triaging system for open-source repos",
-            added: "20/01/2025",
-            builders: 9,
-            hours: "6+ hrs to validate",
-            color: "#0d1a2b",
-        },
-        {
-            id: 3,
-            tag: "AI & Tech",
-            level: "Advanced",
-            title: "Real-time multilingual transcription for live events",
-            added: "05/03/2025",
-            builders: 21,
-            hours: "10+ hrs to validate",
-            color: "#0a1a0a",
-        },
-    ],
-    "Social Impact": [
-        {
-            id: 4,
-            tag: "Social Impact",
-            level: "Beginner",
-            title: "Platform connecting local NGOs with skilled volunteers",
-            added: "01/02/2025",
-            builders: 7,
-            hours: "4+ hrs to validate",
-            color: "#1a0d0d",
-        },
-        {
-            id: 5,
-            tag: "Social Impact",
+            tag: "Validated",
             level: "Intermediate",
             title: "Mental health check-in app for remote workers",
             added: "18/01/2025",
@@ -61,46 +29,14 @@ const problems: Record<Tab, { id: number; tag: string; level: string; title: str
             color: "#120a1a",
         },
         {
-            id: 6,
-            tag: "Social Impact",
+            id: 3,
+            tag: "Validated",
             level: "Beginner",
             title: "Hyperlocal food waste reduction marketplace",
             added: "22/02/2025",
             builders: 5,
             hours: "3+ hrs to validate",
             color: "#1a1a0a",
-        },
-    ],
-    "Free to Build": [
-        {
-            id: 7,
-            tag: "Free to Build",
-            level: "Beginner",
-            title: "Open-source habit tracker with community challenges",
-            added: "10/01/2025",
-            builders: 18,
-            hours: "3+ hrs to validate",
-            color: "#0a1a1a",
-        },
-        {
-            id: 8,
-            tag: "Free to Build",
-            level: "Intermediate",
-            title: "Developer portfolio builder with GitHub integration",
-            added: "14/02/2025",
-            builders: 26,
-            hours: "5+ hrs to validate",
-            color: "#1a0a1a",
-        },
-        {
-            id: 9,
-            tag: "Free to Build",
-            level: "Beginner",
-            title: "Markdown-based personal wiki with local-first sync",
-            added: "28/02/2025",
-            builders: 11,
-            hours: "4+ hrs to validate",
-            color: "#0d1a0d",
         },
     ],
 };
@@ -112,13 +48,13 @@ const levelColors: Record<string, string> = {
 };
 
 export default function FeaturedProblems() {
-    const [active, setActive] = useState<Tab>("AI & Tech");
+    const [active, setActive] = useState<Tab>("Validated Opportunities");
 
     return (
         <section className="fp-section container">
             {/* Header */}
             <div className="fp-header">
-                <h2 className="fp-title">Explore &amp; Build, <span className="fp-accent">Together</span></h2>
+                <h2 className="fp-title">Validated Startup <span className="fp-accent">Missions</span></h2>
                 <p className="fp-subtitle">
                     Discover a range of validated problems designed to help you{" "}
                     master building, launch MVPs, and{" "}
@@ -184,23 +120,17 @@ export default function FeaturedProblems() {
 
                         {/* CTA Footer */}
                         <div className="fp-card-footer">
-                            <Link href={`/problem/${p.id}`} className="fp-card-btn">
+                            <Link href="/signin" className="fp-card-btn">
                                 Explore Idea
                             </Link>
-                            <button className="fp-card-btn-secondary" title="Save to interest list">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                            <button className="fp-card-btn-secondary" title="Save to interest list" aria-label="Save to interest list">
+                                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
                             </button>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* View all */}
-            <div className="fp-view-all">
-                <Link href="/explore">
-                    <button className="fp-view-btn">View All Opportunities</button>
-                </Link>
-            </div>
         </section>
     );
 }
