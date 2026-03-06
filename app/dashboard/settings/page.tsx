@@ -14,33 +14,107 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="dashboard-page">
-            <header className="dashboard-header">
-                <h1>Settings</h1>
-                <p>Manage your account, preferences, and platform role.</p>
+        <div className="dashboard-page" style={{ padding: "4rem 2rem", maxWidth: "1000px", margin: "0 auto" }}>
+            <header style={{ marginBottom: "4rem", borderBottom: "1px solid #e2e8f0", paddingBottom: "2rem" }}>
+                <h1 style={{ fontSize: "2.5rem", fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.025em" }}>Account Settings</h1>
+                <p style={{ fontSize: "1.125rem", color: "#64748b", marginTop: "0.75rem", lineHeight: "1.5" }}>
+                    Manage your identity and platform configuration in a centralized workspace.
+                </p>
             </header>
 
-            <div className="chart-card" style={{ maxWidth: "800px" }}>
-                <div className="input-wrapper">
-                    <label className="input-label">Display Name</label>
-                    <input type="text" className="base-input" defaultValue={user?.displayName || "Sohith"} />
-                </div>
-                <div className="input-wrapper">
-                    <label className="input-label">Email Address</label>
-                    <input type="email" className="base-input" defaultValue={user?.email || ""} disabled />
-                </div>
-                <div className="input-wrapper">
-                    <label className="input-label">Platform Role</label>
-                    <select className="base-input">
-                        <option>Idea Giver</option>
-                        <option>Developer / Builder</option>
-                        <option>Investor</option>
-                    </select>
-                </div>
+            <div style={{ display: "grid", gap: "4rem" }}>
+                {/* Personal Information Section */}
+                <section>
+                    <div style={{ marginBottom: "2rem" }}>
+                        <h2 style={{ fontSize: "1.5rem", fontWeight: 600, color: "#0f172a" }}>Personal Information</h2>
+                        <p style={{ fontSize: "0.95rem", color: "#64748b", marginTop: "0.25rem" }}>Update your public profile and contact details.</p>
+                    </div>
 
-                <div style={{ marginTop: "2rem", paddingTop: "2rem", borderTop: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between" }}>
-                    <button className="btn-blue">Save Changes</button>
-                    <button onClick={handleLogout} className="btn-ghost" style={{ color: "#ef4444" }}>Sign Out</button>
+                    <div className="card" style={{ border: "1px solid #e2e8f0", background: "#ffffff", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", padding: "2.5rem", borderRadius: "8px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem" }}>
+                            <div className="input-wrapper">
+                                <label className="input-label" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#475569", fontWeight: 700, marginBottom: "0.75rem" }}>Full Name</label>
+                                <input
+                                    type="text"
+                                    className="base-input"
+                                    defaultValue="Kontham sohith"
+                                    style={{ borderColor: "#cbd5e1", borderRadius: "6px", width: "100%", padding: "0.875rem" }}
+                                />
+                            </div>
+                            <div className="input-wrapper">
+                                <label className="input-label" style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#475569", fontWeight: 700, marginBottom: "0.75rem" }}>Email Address</label>
+                                <input
+                                    type="email"
+                                    className="base-input"
+                                    defaultValue="sohithkontham5@gmail.com"
+                                    disabled
+                                    style={{ background: "#f1f5f9", borderColor: "#e2e8f0", color: "#64748b", borderRadius: "6px", width: "100%", cursor: "not-allowed", padding: "0.875rem" }}
+                                />
+                            </div>
+                        </div>
+                        <div style={{ marginTop: "3rem", display: "flex", justifyContent: "flex-end" }}>
+                            <button className="btn-blue" style={{ borderRadius: "6px", padding: "0.75rem 2.5rem", fontSize: "0.95rem", fontWeight: 600, boxShadow: "0 1px 2px rgba(0, 122, 255, 0.2)" }}>
+                                Save Profile Changes
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Support & Security Row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2.5rem" }}>
+                    {/* Professional Help & Support Section */}
+                    <section style={{ display: "flex", flexDirection: "column" }}>
+                        <div style={{ marginBottom: "1.5rem" }}>
+                            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#0f172a" }}>Assistance & Support</h2>
+                        </div>
+                        <div className="card" style={{ border: "1px solid #e2e8f0", background: "#f8fafc", padding: "2rem", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", borderRadius: "8px" }}>
+                            <p style={{ fontSize: "0.95rem", color: "#475569", lineHeight: "1.6", marginBottom: "2rem" }}>
+                                For inquiries regarding platform functionality or technical issues, please consult our documentation or contact our dedicated support division.
+                            </p>
+                            <div style={{ display: "flex", gap: "1rem" }}>
+                                <button className="btn-outline" onClick={() => router.push("/dashboard/help")} style={{ borderRadius: "6px", fontSize: "0.9rem", flex: 1, padding: "0.75rem", fontWeight: 600, background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                                    Knowledge Base
+                                </button>
+                                <button className="btn-outline" onClick={() => window.open("mailto:support@twonnect.com")} style={{ borderRadius: "6px", fontSize: "0.9rem", flex: 1, padding: "0.75rem", fontWeight: 600, background: "#ffffff", border: "1px solid #e2e8f0" }}>
+                                    External Support
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Enhanced Security Section */}
+                    <section style={{ display: "flex", flexDirection: "column" }}>
+                        <div style={{ marginBottom: "1.5rem" }}>
+                            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, color: "#0f172a" }}>Authentication</h2>
+                        </div>
+                        <div className="card" style={{ border: "1px solid #fee2e2", background: "#ffffff", padding: "2rem", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", borderRadius: "8px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                            <p style={{ fontSize: "0.95rem", color: "#7f1d1d", lineHeight: "1.6", marginBottom: "2rem" }}>
+                                Terminate your active session. We emphasize the security of your data—please ensure you log out when using public terminals.
+                            </p>
+                            <button
+                                onClick={handleLogout}
+                                className="btn-ghost"
+                                style={{
+                                    border: "1px solid #fecaca",
+                                    color: "#b91c1c",
+                                    background: "#fef2f2",
+                                    borderRadius: "6px",
+                                    padding: "0.75rem",
+                                    fontSize: "0.95rem",
+                                    fontWeight: 700,
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.6rem",
+                                    transition: "all 0.15s ease-in-out"
+                                }}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                                Terminate Session
+                            </button>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
