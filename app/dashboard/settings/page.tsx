@@ -193,7 +193,7 @@ export default function SettingsPage() {
                         <div className="s-avatar">{initials}</div>
                         <div className="s-avatar-info">
                             <div className="s-avatar-name">{displayName || 'Your Name'}</div>
-                            <div className="s-avatar-email">{user?.email}</div>
+                            <div className="s-avatar-email" title={user?.email || ""}>{user?.email}</div>
                         </div>
                     </div>
 
@@ -426,7 +426,7 @@ export default function SettingsPage() {
                 .s-avatar-wrap { display: flex; align-items: center; gap: 0.875rem; padding: 1.25rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 0.5rem; }
                 .s-avatar { width: 42px; height: 42px; border-radius: 10px; background: #111827; color: #ffffff; font-size: 1rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; letter-spacing: -0.02em; }
                 .s-avatar-name { font-size: 0.875rem; font-weight: 700; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                .s-avatar-email { font-size: 0.72rem; color: #9ca3af; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                .s-avatar-email { font-size: 0.72rem; color: #9ca3af; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
                 .s-nav { display: flex; flex-direction: column; gap: 2px; background: transparent; padding: 0; }
                 .s-nav-item { display: flex; align-items: center; gap: 0.625rem; width: 100%; padding: 0.75rem 1rem; background: transparent; border: none; border-radius: 10px; font-size: 0.875rem; font-weight: 500; color: #4b5563; cursor: pointer; text-align: left; transition: all 0.12s; font-family: inherit; }
                 .s-nav-item:hover { background: #f3f4f6; color: #111827; }
