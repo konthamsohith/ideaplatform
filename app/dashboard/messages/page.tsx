@@ -167,13 +167,13 @@ export default function MessagesPage() {
             const newMsg: Message = { id: Date.now(), from: 'me', text: userText, time: now };
 
             setChats(prev => prev.map(c => c.id === activeChatId
-                ? { ...c, messages: [...(c.messages || []), newMsg], lastMsg: userText, time: 'Just now' }
+                ? { ...c, messages: [...((c as any).messages || []), newMsg], lastMsg: userText, time: 'Just now' }
                 : c
             ));
             setInput("");
 
             try {
-                const apiMessages = [...(currentActiveChat.messages || []), newMsg].map((m: any) => ({
+                const apiMessages = [...((currentActiveChat as any).messages || []), newMsg].map((m: any) => ({
                     role: m.from === 'me' ? 'user' : 'assistant',
                     content: m.text
                 }));
@@ -190,7 +190,7 @@ export default function MessagesPage() {
                     const aiNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const aiMsg: Message = { id: Date.now() + 1, from: 'them', text: data.reply, time: aiNow };
                     setChats(prev => prev.map(c => c.id === activeChatId
-                        ? { ...c, messages: [...(c.messages || []), aiMsg], lastMsg: "New response from AI", time: 'Just now', unread: 0 }
+                        ? { ...c, messages: [...((c as any).messages || []), aiMsg], lastMsg: "New response from AI", time: 'Just now', unread: 0 }
                         : c
                     ));
                 }
@@ -305,63 +305,51 @@ export default function MessagesPage() {
                             <>
                                 {/* Messages */}
                                 <div className="messages-area">
-                                    {messages.map(msg => (
-                                        <div key={msg.id} className={`msg-row ${msg.sender_id === 'me' ? 'msg-me' : 'msg-them'}`}>
-                                            {msg.sender_id !== 'me' && (
-                                                <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                                    {getAvatar(activeChat.tag).icon}
+                                    {
+                                        activeChat.tag !== 'ai' ? messages.map(msg => (
+                                            <div key={msg.id} className={`msg-row ${msg.sender_id === 'me' ? 'msg-me' : 'msg-them'}`}>
+                                                {msg.sender_id !== 'me' && (
+                                                    <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                        {getAvatar(activeChat.tag).icon}
+                                                    </div>
+                                                )}
+                                                <div className="bubble-wrap">
+                                                    <div className={`bubble ${msg.sender_id === 'me' ? 'bubble-me' : 'bubble-them'}`}>{msg.text}</div>
+                                                    <span className="msg-time">{formatTime(msg.created_at)}</span>
                                                 </div>
-                                            )}
+                                            </div>
+                                        )) : (activeChat as any).messages?.map((msg: any) => (
+                                            <div key={msg.id} className={`msg-row ${msg.from === 'me' ? 'msg-me' : 'msg-them'}`}>
+                                                {msg.from === 'them' && (
+                                                    <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                        {getAvatar(activeChat.tag).icon}
+                                                    </div>
+                                                )}
+                                                <div className="bubble-wrap">
+                                                    <div className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-them'}`}>
+                                                        {msg.from === 'them' ? (
+                                                            <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
+                                                        ) : (
+                                                            msg.text
+                                                        )}
+                                                    </div>
+                                                    <span className="msg-time">{msg.time}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    }
+                                    {isTyping && activeChat.tag === 'ai' && (
+                                        <div className="msg-row msg-them">
+                                            <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                {getAvatar(activeChat.tag).icon}
+                                            </div>
                                             <div className="bubble-wrap">
-                                                <div className={`bubble ${msg.sender_id === 'me' ? 'bubble-me' : 'bubble-them'}`}>{msg.text}</div>
-                                                <span className="msg-time">{formatTime(msg.created_at)}</span>
+                                                <div className="bubble bubble-them typing-indicator-bubble">
+                                                    <span></span><span></span><span></span>
+                                                </div>
                                             </div>
                                         </div>
-                                    {
-                                            activeChat.tag !== 'ai' ? messages.map(msg => (
-                                                <div key={msg.id} className={`msg-row ${msg.sender_id === 'me' ? 'msg-me' : 'msg-them'}`}>
-                                                    {msg.sender_id !== 'me' && (
-                                                        <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                                            {getAvatar(activeChat.tag).icon}
-                                                        </div>
-                                                    )}
-                                                    <div className="bubble-wrap">
-                                                        <div className={`bubble ${msg.sender_id === 'me' ? 'bubble-me' : 'bubble-them'}`}>{msg.text}</div>
-                                                        <span className="msg-time">{formatTime(msg.created_at)}</span>
-                                                    </div>
-                                                </div>
-                                            )) : (activeChat as any).messages?.map((msg: any) => (
-                                                <div key={msg.id} className={`msg-row ${msg.from === 'me' ? 'msg-me' : 'msg-them'}`}>
-                                                    {msg.from === 'them' && (
-                                                        <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                                            {getAvatar(activeChat.tag).icon}
-                                                        </div>
-                                                    )}
-                                                    <div className="bubble-wrap">
-                                                        <div className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-them'}`}>
-                                                            {msg.from === 'them' ? (
-                                                                <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
-                                                            ) : (
-                                                                msg.text
-                                                            )}
-                                                        </div>
-                                                        <span className="msg-time">{msg.time}</span>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        }
-                                    { isTyping && activeChat.tag === 'ai' && (
-                                            <div className="msg-row msg-them">
-                                                <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                                    {getAvatar(activeChat.tag).icon}
-                                                </div>
-                                                <div className="bubble-wrap">
-                                                    <div className="bubble bubble-them typing-indicator-bubble">
-                                                        <span></span><span></span><span></span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
+                                    )}
                                     <div ref={messagesEndRef} />
                                 </div>
 

@@ -219,8 +219,10 @@ export const getChats = async () => {
 
         if (error) throw error;
         return data as Chat[];
-    } catch (error) {
-        console.error("Error fetching chats:", JSON.stringify(error, null, 2));
+    } catch (error: any) {
+        if (error.code !== "PGRST205") { // Ignore missing table error during initial setup
+            console.error("Error fetching chats:", JSON.stringify(error, null, 2));
+        }
         return [];
     }
 };
@@ -239,8 +241,10 @@ export const getMessages = async (chatId: number) => {
 
         if (error) throw error;
         return data as ChatMessage[];
-    } catch (error) {
-        console.error("Error fetching messages:", JSON.stringify(error, null, 2));
+    } catch (error: any) {
+        if (error.code !== "PGRST205") { // Ignore missing table error during initial setup
+            console.error("Error fetching messages:", JSON.stringify(error, null, 2));
+        }
         return [];
     }
 };
