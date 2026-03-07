@@ -24,6 +24,24 @@ export interface Idea {
     equity_offered?: string;
 }
 
+export interface Chat {
+    id: number;
+    created_at: string;
+    updated_at: string;
+    name: string;
+    role: string;
+    tag: 'co-founder' | 'ai' | 'investor';
+    unread: number;
+}
+
+export interface ChatMessage {
+    id: number;
+    chat_id: number;
+    sender_id: string;
+    text: string;
+    created_at: string;
+}
+
 /**
  * Fetches a user profile from Supabase.
  */
@@ -185,5 +203,68 @@ export const getCollaborativeIdeas = async () => {
     } catch (error) {
         console.error("Error fetching collaborative ideas:", JSON.stringify(error, null, 2));
         return [];
+    }
+};
+
+/**
+ * Fetches all chats.
+ */
+export const getChats = async () => {
+    if (!supabase) return [];
+    try {
+        const { data, error } = await supabase
+            .from("chats")
+            .select("*")
+            .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        return data as Chat[];
+    } catch (error) {
+        console.error("Error fetching chats:", JSON.stringify(error, null, 2));
+        return [];
+    }
+};
+
+/**
+ * Fetches messages for a specific chat.
+ */
+export const getMessages = async (chatId: number) => {
+    if (!supabase) return [];
+    try {
+        const { data, error } = await supabase
+            .from("messages")
+            .select("*")
+            .eq("chat_id", chatId)
+            .order("created_at", { ascending: true });
+
+        if (error) throw error;
+        return data as ChatMessage[];
+    } catch (error) {
+        console.error("Error fetching messages:", JSON.stringify(error, null, 2));
+        return [];
+    }
+};
+
+/**
+ * Sends a message in a specific chat.
+ */
+export const sendChatMessage = async (chatId: number, text: string, senderId: string = "me") => {
+    if (!supabase) return null;
+    try {
+        const { data, error } = await supabase
+            .from("messages")
+            .insert([{ chat_id: chatId, text, sender_id: senderId }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // Update the chat's updated_at timestamp
+        await supabase.from("chats").update({ updated_at: new Date().toISOString() }).eq("id", chatId);
+
+        return data as ChatMessage;
+    } catch (error) {
+        console.error("Error sending message:", JSON.stringify(error, null, 2));
+        return null;
     }
 };

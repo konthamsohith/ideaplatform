@@ -3,10 +3,25 @@
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
+import dynamic from 'next/dynamic';
+import { supabase } from "@/lib/supabase";
+import { Chat, ChatMessage, getChats, getMessages, sendChatMessage } from "@/lib/supabase-db";
+
+const VideoCallUI = dynamic(() => import('@/app/components/VideoCallUI'), { ssr: false });
 // ── Icons ──────────────────────────────────────────────────────────
 const IconSend = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+    </svg>
+);
+const IconVideo = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </svg>
+);
+const IconPhone = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
 );
 const IconSearch = () => (
@@ -39,37 +54,18 @@ const IconTrash = () => (
 );
 
 // ── Types & Seed Data ──────────────────────────────────────────────
-type Message = { id: number; from: 'me' | 'them'; text: string; time: string; };
-type Chat = { id: number; name: string; role: string; tag: 'co-founder' | 'ai' | 'investor'; lastMsg: string; time: string; unread: number; messages: Message[]; };
-
 const INITIAL_CHATS: Chat[] = [
     {
         id: 1, name: "Sohith", role: "Co-founder", tag: "co-founder",
-        lastMsg: "Let's review the mockups tomorrow.", time: "2m ago", unread: 2,
-        messages: [
-            { id: 1, from: 'them', text: "Hey! Have you pushed the latest design updates?", time: "09:12 AM" },
-            { id: 2, from: 'me', text: "Yes, just pushed. Check the investor portal — complete rebuild.", time: "09:15 AM" },
-            { id: 3, from: 'them', text: "Looks incredible. The cap table modal is 🔥", time: "09:18 AM" },
-            { id: 4, from: 'them', text: "Let's review the mockups tomorrow.", time: "09:20 AM" },
-        ]
+        updated_at: new Date().toISOString(), created_at: new Date().toISOString(), unread: 2
     },
     {
         id: 2, name: "TWONNECT Assistant", role: "AI Collaborator", tag: "ai",
-        lastMsg: "I've refined your problem statement...", time: "1h ago", unread: 0,
-        messages: [
-            { id: 1, from: 'them', text: "Hello! I've analyzed your latest idea submission.", time: "08:00 AM" },
-            { id: 2, from: 'them', text: "I've refined your problem statement to improve clarity and investor appeal.", time: "08:01 AM" },
-            { id: 3, from: 'me', text: "Show me the refined version.", time: "08:05 AM" },
-            { id: 4, from: 'them', text: "Twonnect enables distributed teams to co-create ventures by validating ideas through structured peer review and aligned capital deployment. It reduces founder isolation by connecting complementary skill sets.", time: "08:06 AM" },
-        ]
+        updated_at: new Date(Date.now() - 3600000).toISOString(), created_at: new Date(Date.now() - 3600000).toISOString(), unread: 0
     },
     {
         id: 3, name: "Investor Group #4", role: "Seed Stage LP", tag: "investor",
-        lastMsg: "We are interested in your recent pilot...", time: "5h ago", unread: 1,
-        messages: [
-            { id: 1, from: 'them', text: "We've reviewed your Q1 metrics. Strong data volume growth.", time: "03:00 AM" },
-            { id: 2, from: 'them', text: "We are interested in your recent pilot — could we schedule a call this week?", time: "03:05 AM" },
-        ]
+        updated_at: new Date(Date.now() - 86400000).toISOString(), created_at: new Date(Date.now() - 86400000).toISOString(), unread: 1
     },
 ];
 
@@ -82,44 +78,63 @@ function getAvatar(tag: Chat['tag']) {
 // ── Component ──────────────────────────────────────────────────────
 export default function MessagesPage() {
     const { user } = useAuth();
-    const [chats, setChats] = useState<Chat[]>(INITIAL_CHATS);
+    const [chats, setChats] = useState<Chat[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [activeChatId, setActiveChatId] = useState<number | null>(null);
     const [search, setSearch] = useState("");
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [callMode, setCallMode] = useState<"none" | "video" | "audio">("none");
+    const [roomID, setRoomID] = useState<string>("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (!user) return;
-        const storageKey = `twonnect_messages_${user.id}`;
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                setChats(parsed);
-            } catch (e) {
-                console.error("Failed to load messages", e);
-            }
-        }
-        setIsLoaded(true);
-    }, [user]);
 
-    useEffect(() => {
-        if (isLoaded && user) {
-            const storageKey = `twonnect_messages_${user.id}`;
-            localStorage.setItem(storageKey, JSON.stringify(chats));
-        }
-    }, [chats, isLoaded, user]);
 
     const activeChat = chats.find(c => c.id === activeChatId) ?? null;
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [activeChat?.messages.length]);
+    }, [messages.length]);
+
+    // Fetch initial chat list or fallback to seed
+    useEffect(() => {
+        const loadChats = async () => {
+            const data = await getChats();
+            if (data && data.length > 0) {
+                setChats(data);
+            } else {
+                setChats(INITIAL_CHATS); // Fallback if DB table is missing or empty
+            }
+        };
+        loadChats();
+    }, []);
+
+    // Fetch messages when a chat is selected
+    useEffect(() => {
+        if (!activeChatId) return;
+
+        const loadMessages = async () => {
+            const data = await getMessages(activeChatId);
+            setMessages(data);
+        };
+        loadMessages();
+
+        // Subscribe to real-time new messages
+        const channel = supabase
+            .channel(`public:messages:chat_${activeChatId}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${activeChatId}` }, (payload) => {
+                setMessages(prev => [...prev, payload.new as ChatMessage]);
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [activeChatId]);
 
     const selectChat = (id: number) => {
         setActiveChatId(id);
+        setCallMode("none");
         setChats(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c));
     };
 
@@ -131,25 +146,34 @@ export default function MessagesPage() {
         }
     };
 
+    const startCall = (type: "video" | "audio") => {
+        if (!activeChatId) return;
+        const newRoomID = `room_${activeChatId}_${Math.floor(Math.random() * 10000)}`;
+        setRoomID(newRoomID);
+        setCallMode(type);
+    };
+
     const sendMessage = async () => {
         if (!input.trim() || !activeChatId || isTyping) return;
-        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const userText = input.trim();
-        const newMsg: Message = { id: Date.now(), from: 'me', text: userText, time: now };
-
-        setChats(prev => prev.map(c => c.id === activeChatId
-            ? { ...c, messages: [...c.messages, newMsg], lastMsg: userText, time: 'Just now' }
-            : c
-        ));
-        setInput("");
 
         const currentActiveChat = chats.find(c => c.id === activeChatId);
 
-        // If talking to AI
         if (currentActiveChat?.tag === 'ai') {
             setIsTyping(true);
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const userText = input.trim();
+            // Using the type Message for AI chat flow, as DB does not support AI routing directly yet
+            type Message = { id: number; from: 'me' | 'them'; text: string; time: string; };
+            const newMsg: Message = { id: Date.now(), from: 'me', text: userText, time: now };
+
+            setChats(prev => prev.map(c => c.id === activeChatId
+                ? { ...c, messages: [...(c.messages || []), newMsg], lastMsg: userText, time: 'Just now' }
+                : c
+            ));
+            setInput("");
+
             try {
-                const apiMessages = [...currentActiveChat.messages, newMsg].map(m => ({
+                const apiMessages = [...(currentActiveChat.messages || []), newMsg].map((m: any) => ({
                     role: m.from === 'me' ? 'user' : 'assistant',
                     content: m.text
                 }));
@@ -166,7 +190,7 @@ export default function MessagesPage() {
                     const aiNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const aiMsg: Message = { id: Date.now() + 1, from: 'them', text: data.reply, time: aiNow };
                     setChats(prev => prev.map(c => c.id === activeChatId
-                        ? { ...c, messages: [...c.messages, aiMsg], lastMsg: "New response from AI", time: 'Just now', unread: 0 }
+                        ? { ...c, messages: [...(c.messages || []), aiMsg], lastMsg: "New response from AI", time: 'Just now', unread: 0 }
                         : c
                     ));
                 }
@@ -175,7 +199,24 @@ export default function MessagesPage() {
             } finally {
                 setIsTyping(false);
             }
+        } else {
+            const text = input.trim();
+            setInput(""); // Optimistically clear input
+
+            await sendChatMessage(activeChatId, text, "me");
+
+            // Also update local chats array so preview updates
+            setChats(prev => prev.map(c => c.id === activeChatId
+                ? { ...c, updated_at: new Date().toISOString() }
+                : c
+            ));
         }
+
+    };
+
+    const formatTime = (isoString?: string) => {
+        if (!isoString) return "";
+        return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     const filteredChats = chats.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
@@ -209,10 +250,10 @@ export default function MessagesPage() {
                                     <div className="chat-info">
                                         <div className="chat-meta">
                                             <span className="chat-name">{chat.name}</span>
-                                            <span className="chat-time">{chat.time}</span>
+                                            <span className="chat-time">{formatTime(chat.updated_at)}</span>
                                         </div>
                                         <div className="chat-meta">
-                                            <span className="chat-preview">{chat.lastMsg}</span>
+                                            <span className="chat-preview">{chat.tag === 'ai' ? (chat as any).lastMsg : "Active Conversation"}</span>
                                             {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
                                         </div>
                                     </div>
@@ -241,64 +282,108 @@ export default function MessagesPage() {
                                     <div className="ch-role">{activeChat.role}</div>
                                 </div>
                             </div>
-                            <div className={`chat-tag-pill tag-${activeChat.tag}`}>
-                                {activeChat.tag === 'ai' ? 'AI' : activeChat.tag === 'investor' ? 'Investor' : 'Co-founder'}
+                            <div className="chat-header-right">
+                                <button className="btn-call" onClick={() => startCall("audio")} title="Start Voice Call"><IconPhone /></button>
+                                <button className="btn-call" onClick={() => startCall("video")} title="Start Video Call"><IconVideo /></button>
+                                <div className={`chat-tag-pill tag-${activeChat.tag}`}>
+                                    {activeChat.tag === 'ai' ? 'AI' : activeChat.tag === 'investor' ? 'Investor' : 'Co-founder'}
+                                </div>
                             </div>
                         </div>
 
-                        {/* Messages */}
-                        <div className="messages-area">
-                            {activeChat.messages.map(msg => (
-                                <div key={msg.id} className={`msg-row ${msg.from === 'me' ? 'msg-me' : 'msg-them'}`}>
-                                    {msg.from === 'them' && (
-                                        <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                            {getAvatar(activeChat.tag).icon}
-                                        </div>
-                                    )}
-                                    <div className="bubble-wrap">
-                                        <div className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-them'}`}>
-                                            {activeChat.tag === 'ai' && msg.from === 'them' ? (
-                                                <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
-                                            ) : (
-                                                msg.text
+                        {callMode !== "none" ? (
+                            <div className="call-container">
+                                <VideoCallUI
+                                    roomID={roomID}
+                                    userID={`user_${Math.floor(Math.random() * 10000)}`}
+                                    userName={"Current User"}
+                                    mode={callMode === "video" ? "OneONoneCall" : "OneONoneCall"}
+                                />
+                                <button className="btn-end-call" onClick={() => setCallMode("none")}>End Call</button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Messages */}
+                                <div className="messages-area">
+                                    {messages.map(msg => (
+                                        <div key={msg.id} className={`msg-row ${msg.sender_id === 'me' ? 'msg-me' : 'msg-them'}`}>
+                                            {msg.sender_id !== 'me' && (
+                                                <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                    {getAvatar(activeChat.tag).icon}
+                                                </div>
                                             )}
+                                            <div className="bubble-wrap">
+                                                <div className={`bubble ${msg.sender_id === 'me' ? 'bubble-me' : 'bubble-them'}`}>{msg.text}</div>
+                                                <span className="msg-time">{formatTime(msg.created_at)}</span>
+                                            </div>
                                         </div>
-                                        <span className="msg-time">{msg.time}</span>
-                                    </div>
+                                    {
+                                            activeChat.tag !== 'ai' ? messages.map(msg => (
+                                                <div key={msg.id} className={`msg-row ${msg.sender_id === 'me' ? 'msg-me' : 'msg-them'}`}>
+                                                    {msg.sender_id !== 'me' && (
+                                                        <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                            {getAvatar(activeChat.tag).icon}
+                                                        </div>
+                                                    )}
+                                                    <div className="bubble-wrap">
+                                                        <div className={`bubble ${msg.sender_id === 'me' ? 'bubble-me' : 'bubble-them'}`}>{msg.text}</div>
+                                                        <span className="msg-time">{formatTime(msg.created_at)}</span>
+                                                    </div>
+                                                </div>
+                                            )) : (activeChat as any).messages?.map((msg: any) => (
+                                                <div key={msg.id} className={`msg-row ${msg.from === 'me' ? 'msg-me' : 'msg-them'}`}>
+                                                    {msg.from === 'them' && (
+                                                        <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                            {getAvatar(activeChat.tag).icon}
+                                                        </div>
+                                                    )}
+                                                    <div className="bubble-wrap">
+                                                        <div className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-them'}`}>
+                                                            {msg.from === 'them' ? (
+                                                                <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
+                                                            ) : (
+                                                                msg.text
+                                                            )}
+                                                        </div>
+                                                        <span className="msg-time">{msg.time}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        }
+                                    { isTyping && activeChat.tag === 'ai' && (
+                                            <div className="msg-row msg-them">
+                                                <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                                    {getAvatar(activeChat.tag).icon}
+                                                </div>
+                                                <div className="bubble-wrap">
+                                                    <div className="bubble bubble-them typing-indicator-bubble">
+                                                        <span></span><span></span><span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    <div ref={messagesEndRef} />
                                 </div>
-                            ))}
-                            {isTyping && activeChat.tag === 'ai' && (
-                                <div className="msg-row msg-them">
-                                    <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                        {getAvatar(activeChat.tag).icon}
-                                    </div>
-                                    <div className="bubble-wrap">
-                                        <div className="bubble bubble-them typing-indicator-bubble">
-                                            <span></span><span></span><span></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
 
-                        {/* Compose */}
-                        <div className="compose-bar">
-                            <input
-                                className="compose-input"
-                                placeholder="Type a message..."
-                                value={input}
-                                onChange={e => setInput(e.target.value)}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                        e.preventDefault();
-                                        sendMessage();
-                                    }
-                                }} />
-                            <button className="btn-send" onClick={sendMessage} disabled={!input.trim() || isTyping}>
-                                <IconSend /> <span>Send</span>
-                            </button>
-                        </div>
+                                {/* Compose */}
+                                <div className="compose-bar">
+                                    <input
+                                        className="compose-input"
+                                        placeholder="Type a message..."
+                                        value={input}
+                                        onChange={e => setInput(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                sendMessage();
+                                            }
+                                        }} />
+                                    <button className="btn-send" onClick={sendMessage} disabled={!input.trim()}>
+                                        <IconSend /> <span>Send</span>
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </>
                 ) : (
                     <div className="empty-state">
@@ -450,6 +535,37 @@ export default function MessagesPage() {
                 .chat-header-left { display: flex; align-items: center; gap: 0.875rem; }
                 .ch-name { font-size: 0.95rem; font-weight: 700; color: #111827; }
                 .ch-role { font-size: 0.75rem; color: #6b7280; font-weight: 500; margin-top: 1px; }
+
+                .chat-header-right { display: flex; align-items: center; gap: 0.75rem; }
+                
+                .btn-call {
+                    width: 36px; height: 36px; border-radius: 8px;
+                    display: flex; align-items: center; justify-content: center;
+                    background: transparent; border: 1px solid #e5e7eb; color: #4b5563;
+                    cursor: pointer; transition: all 0.2s;
+                }
+                .btn-call:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
+
+                .call-container {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    background: #111827;
+                    position: relative;
+                }
+                .btn-end-call {
+                    position: absolute;
+                    bottom: 2rem;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #ef4444; color: white;
+                    border: none; border-radius: 20px;
+                    padding: 10px 24px; font-weight: 600; cursor: pointer;
+                    z-index: 10; font-size: 0.9rem;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                    transition: background 0.2s;
+                }
+                .btn-end-call:hover { background: #dc2626; }
 
                 .chat-tag-pill {
                     font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
