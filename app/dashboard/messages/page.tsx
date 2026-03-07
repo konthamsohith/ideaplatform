@@ -6,9 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 import dynamic from 'next/dynamic';
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Chat, ChatMessage, getChats, getMessages, sendChatMessage, getUserChats, getOrCreatePrivateChat, ensureAIChat, resetUnread } from "@/lib/supabase-db";
+import { Chat, ChatMessage, getChats, getMessages, sendChatMessage, getUserChats, getOrCreatePrivateChat, resetUnread, getChatParticipants } from "@/lib/supabase-db";
 
 const VideoCallUI = dynamic(() => import('@/app/components/VideoCallUI'), { ssr: false });
+
 // ── Icons ──────────────────────────────────────────────────────────
 const IconSend = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -23,6 +24,12 @@ const IconVideo = () => (
 const IconPhone = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+);
+const IconPhoneOff = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7c1.1.2 2 1.07 2 2.18v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-2.67a19.42 19.42 0 0 1-2.67-3.33 19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91" />
+        <line x1="23" y1="1" x2="1" y2="23" />
     </svg>
 );
 const IconSearch = () => (
@@ -54,12 +61,19 @@ const IconTrash = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
 );
 
-// ── Types & Seed Data ──────────────────────────────────────────────
+// ── Types & Utils ──────────────────────────────────────────────────
 function getAvatar(tag: Chat['tag']) {
     if (tag === 'ai') return { icon: <IconBot />, color: '#7c3aed', bg: '#ede9fe' };
     if (tag === 'investor') return { icon: <IconBriefcase />, color: '#0369a1', bg: '#e0f2fe' };
+    if (tag === 'group') return { icon: <IconUsers />, color: '#854d0e', bg: '#fef9c3' };
     return { icon: <IconUsers />, color: '#059669', bg: '#d1fae5' };
 }
+
+const formatTime = (dateStr: string | undefined) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
 
 // ── Component ──────────────────────────────────────────────────────
 export default function MessagesPage() {
@@ -73,9 +87,9 @@ export default function MessagesPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [callMode, setCallMode] = useState<"none" | "video" | "audio">("none");
     const [roomID, setRoomID] = useState<string>("");
+    const [participants, setParticipants] = useState<{ user_id: string, full_name: string, avatar_url?: string }[]>([]);
+    const [showParticipants, setShowParticipants] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-
-
 
     const activeChat = chats.find(c => c.id === activeChatId) ?? null;
 
@@ -83,159 +97,112 @@ export default function MessagesPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages.length]);
 
-    // Fetch initial chat list or fallback to seed
+    // Initial load
     useEffect(() => {
         if (!user) return;
-
-        const loadChats = async () => {
-            await ensureAIChat(user.id); // Ensure user has AI assistant chat
+        const load = async () => {
             const data = await getUserChats(user.id);
-            if (data) {
-                setChats(data);
-            }
+            if (data) setChats(data);
         };
-        loadChats();
+        load();
     }, [user]);
 
-    // Handle initial active chat ID from search params
+    // Search params
     useEffect(() => {
-        const chatIdParam = searchParams.get('chatId');
-        if (chatIdParam) {
-            setActiveChatId(parseInt(chatIdParam));
-        }
+        const id = searchParams.get('chatId');
+        if (id) setActiveChatId(parseInt(id));
     }, [searchParams]);
 
-    // Fetch messages when a chat is selected
+    // Active chat content
     useEffect(() => {
         if (!activeChatId) return;
-
-        const loadMessages = async () => {
-            const data = await getMessages(activeChatId);
-            setMessages(data);
+        const load = async () => {
+            const [msgs, parts] = await Promise.all([
+                getMessages(activeChatId),
+                getChatParticipants(activeChatId)
+            ]);
+            setMessages(msgs);
+            setParticipants(parts);
         };
-        loadMessages();
+        load();
 
-        // Subscribe to real-time new messages
-        const channel = supabase
-            .channel(`public:messages:chat_${activeChatId}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${activeChatId}` }, (payload) => {
-                setMessages(prev => [...prev, payload.new as ChatMessage]);
+        const channel = supabase.channel(`chat_${activeChatId}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${activeChatId}` }, (p) => {
+                setMessages(prev => [...prev, p.new as ChatMessage]);
             })
             .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
     }, [activeChatId]);
 
-    // Update chats list in real-time
+    // Real-time chat list
     useEffect(() => {
         if (!user) return;
-
-        const channel = supabase
-            .channel('public:chats')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, async (payload) => {
-                // Refresh chats list to get the latest participants/previews
+        const channel = supabase.channel('chat_list_updates')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'chats' }, async () => {
                 const data = await getUserChats(user.id);
-                if (data) {
-                    setChats(data);
-                }
+                if (data) setChats(data);
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_participants', filter: `user_id=eq.${user.id}` }, async () => {
+                const data = await getUserChats(user.id);
+                if (data) setChats(data);
             })
             .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
     }, [user]);
 
-    const selectChat = (id: number) => {
-        setActiveChatId(id);
-        setCallMode("none");
-        resetUnread(id);
-        setChats(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c));
-    };
+    const sendMessage = async () => {
+        if (!input.trim() || !activeChatId || !user) return;
+        const text = input.trim();
+        setInput("");
 
-    const handleDeleteChat = (e: React.MouseEvent, id: number) => {
-        e.stopPropagation();
-        setChats(prev => prev.filter(c => c.id !== id));
-        if (activeChatId === id) {
-            setActiveChatId(null);
+        if (activeChat?.tag === 'ai') {
+            setIsTyping(true);
+            await sendChatMessage(activeChatId, text, user.id);
+            try {
+                const apiMessages = messages.map(m => ({
+                    role: m.sender_id === user.id ? 'user' : 'assistant',
+                    content: m.text
+                }));
+                apiMessages.push({ role: 'user', content: text });
+                const res = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ messages: apiMessages }),
+                });
+                const data = await res.json();
+                if (data.reply) await sendChatMessage(activeChatId, data.reply, "ai_bot");
+            } catch (e) { console.error(e); }
+            finally { setIsTyping(false); }
+        } else {
+            await sendChatMessage(activeChatId, text, user.id);
         }
     };
 
     const startCall = async (type: "video" | "audio") => {
         if (!activeChatId || !user) return;
-        const newRoomID = `room_${activeChatId}_${Math.floor(Math.random() * 10000)}`;
-
-        // Signal the call to the other person by sending a specialized message
-        const signalText = `CALL_SIGNAL:${type}:${newRoomID}`;
-        await sendChatMessage(activeChatId, signalText, user.id);
-
-        setRoomID(newRoomID);
+        const rid = `room_${activeChatId}_${Date.now()}`;
+        await sendChatMessage(activeChatId, `CALL_SIGNAL:${type}:${rid}`, user.id);
+        setRoomID(rid);
         setCallMode(type);
     };
 
-    const sendMessage = async () => {
-        if (!input.trim() || !activeChatId || isTyping) return;
-
-        const currentActiveChat = chats.find(c => c.id === activeChatId);
-
-        if (currentActiveChat?.tag === 'ai') {
-            setIsTyping(true);
-            const userText = input.trim();
-            setInput("");
-
-            // Save user message to DB
-            await sendChatMessage(activeChatId, userText, user?.id || "me");
-
-            try {
-                // Get previous messages from state (which are synced from DB)
-                const apiMessages = messages.map(m => ({
-                    role: m.sender_id === (user?.id || 'me') ? 'user' : 'assistant',
-                    content: m.text
-                }));
-
-                // Add the very latest message
-                apiMessages.push({ role: 'user', content: userText });
-
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ messages: apiMessages }),
-                });
-
-                const data = await response.json();
-
-                if (data.reply) {
-                    // Save AI response to DB
-                    await sendChatMessage(activeChatId, data.reply, "ai_bot");
-                }
-            } catch (error) {
-                console.error("AI chat error", error);
-            } finally {
-                setIsTyping(false);
-            }
-        } else {
-            const text = input.trim();
-            setInput(""); // Optimistically clear input
-
-            await sendChatMessage(activeChatId, text, user?.id || "me");
-
-            // Also update local chats array so preview updates
-            setChats(prev => prev.map(c => c.id === activeChatId
-                ? { ...c, updated_at: new Date().toISOString() }
-                : c
-            ));
+    const endCall = async () => {
+        if (!activeChatId || !user || !roomID) {
+            setCallMode("none");
+            return;
         }
-
+        await sendChatMessage(activeChatId, `CALL_ENDED:${roomID}`, user.id);
+        setCallMode("none");
     };
 
-    const formatTime = (isoString?: string) => {
-        if (!isoString) return "";
-        return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const handleDeleteChat = async (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
+        setChats(prev => prev.filter(c => c.id !== id));
+        if (activeChatId === id) setActiveChatId(null);
     };
 
-    const filteredChats = chats.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+    const filteredChats = chats.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.type === 'dm');
 
     return (
         <div className="messages-root">
@@ -247,7 +214,7 @@ export default function MessagesPage() {
                         <IconSearch />
                         <input
                             className="search-input"
-                            placeholder="Search conversations..."
+                            placeholder="Search chats..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                         />
@@ -255,54 +222,63 @@ export default function MessagesPage() {
                 </div>
                 <div className="chat-list">
                     {filteredChats.map(chat => {
+                        const isDM = chat.type === 'dm';
+                        const otherP = isDM ? chat.participants?.find(p => p.user_id !== user?.id) : null;
+                        const dName = isDM ? (otherP?.full_name || chat.name) : chat.name;
                         const av = getAvatar(chat.tag);
+
                         return (
-                            <div key={chat.id} className={`chat-item-wrapper ${activeChatId === chat.id ? 'active' : ''}`}>
-                                <button
-                                    className="chat-item"
-                                    onClick={() => selectChat(chat.id)}
-                                >
-                                    <div className="avatar" style={{ background: av.bg, color: av.color }}>{av.icon}</div>
+                            <div
+                                key={chat.id}
+                                className={`chat-item-wrapper ${activeChatId === chat.id ? 'active' : ''}`}
+                                onClick={() => { setActiveChatId(chat.id); setShowParticipants(false); setCallMode("none"); }}
+                            >
+                                <div className="chat-item">
+                                    <div className="avatar" style={{ background: av.bg, color: av.color }}>
+                                        {isDM && otherP?.avatar_url ? <img src={otherP.avatar_url} /> : (isDM ? dName[0] : av.icon)}
+                                    </div>
                                     <div className="chat-info">
                                         <div className="chat-meta">
-                                            <span className="chat-name">{chat.name}</span>
-                                            <span className="chat-time">{formatTime(chat.last_message_at || chat.updated_at)}</span>
+                                            <span className="chat-name">{dName}</span>
+                                            <span className="chat-time">{formatTime(chat.last_message_at)}</span>
                                         </div>
                                         <div className="chat-meta">
                                             <span className="chat-preview">{chat.last_message || "No messages yet"}</span>
                                             {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
                                         </div>
                                     </div>
-                                </button>
-                                <button onClick={(e) => handleDeleteChat(e, chat.id)} className="btn-delete-msg">
-                                    <IconTrash />
-                                </button>
+                                </div>
+                                <button className="btn-delete-msg" onClick={e => handleDeleteChat(e, chat.id)}><IconTrash /></button>
                             </div>
                         );
                     })}
                 </div>
             </aside>
 
-            {/* ── CHAT PANEL ── */}
+            {/* ── MAIN ── */}
             <main className="msg-main">
                 {activeChat ? (
                     <>
-                        {/* Header */}
                         <div className="chat-header">
                             <div className="chat-header-left">
                                 <div className="avatar" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                    {getAvatar(activeChat.tag).icon}
+                                    {activeChat.type === 'dm' && participants.find(p => p.user_id !== user?.id)?.avatar_url
+                                        ? <img src={participants.find(p => p.user_id !== user?.id)?.avatar_url} />
+                                        : (activeChat.type === 'dm' ? (participants.find(p => p.user_id !== user?.id)?.full_name?.[0] || activeChat.name[0]) : getAvatar(activeChat.tag).icon)}
                                 </div>
                                 <div>
-                                    <div className="ch-name">{activeChat.name}</div>
+                                    <div className="ch-name">
+                                        {activeChat.type === 'dm' ? (participants.find(p => p.user_id !== user?.id)?.full_name || activeChat.name) : activeChat.name}
+                                    </div>
                                     <div className="ch-role">{activeChat.role}</div>
                                 </div>
                             </div>
                             <div className="chat-header-right">
-                                <button className="btn-call" onClick={() => startCall("audio")} title="Start Voice Call"><IconPhone /></button>
-                                <button className="btn-call" onClick={() => startCall("video")} title="Start Video Call"><IconVideo /></button>
+                                <button className="btn-call" onClick={() => startCall("audio")}><IconPhone /></button>
+                                <button className="btn-call" onClick={() => startCall("video")}><IconVideo /></button>
+                                <button className={`btn-call ${showParticipants ? 'active' : ''}`} onClick={() => setShowParticipants(!showParticipants)}><IconUsers /></button>
                                 <div className={`chat-tag-pill tag-${activeChat.tag}`}>
-                                    {activeChat.tag === 'ai' ? 'AI' : activeChat.tag === 'investor' ? 'Investor' : 'Co-founder'}
+                                    {activeChat.tag === 'ai' ? 'AI' : activeChat.tag === 'investor' ? 'Investor' : activeChat.tag === 'group' ? 'Project' : 'Co-founder'}
                                 </div>
                             </div>
                         </div>
@@ -311,84 +287,61 @@ export default function MessagesPage() {
                             <div className="call-container">
                                 <VideoCallUI
                                     roomID={roomID}
-                                    userID={`user_${Math.floor(Math.random() * 10000)}`}
-                                    userName={"Current User"}
-                                    mode={callMode === "video" ? "OneONoneCall" : "OneONoneCall"}
+                                    userID={user?.id || "anon"}
+                                    userName={user?.user_metadata?.full_name || "User"}
+                                    mode="OneONoneCall"
                                 />
-                                <button className="btn-end-call" onClick={() => setCallMode("none")}>End Call</button>
+                                <button className="btn-end-call" onClick={endCall}>End Call</button>
                             </div>
                         ) : (
                             <>
-                                {/* Messages */}
                                 <div className="messages-area">
-                                    {messages.map((msg) => (
-                                        <div key={msg.id} className={`msg-row ${msg.sender_id === (user?.id || 'me') ? 'msg-me' : 'msg-them'}`}>
-                                            {msg.sender_id !== (user?.id || 'me') && (
+                                    {messages.map(msg => (
+                                        <div key={msg.id} className={`msg-row ${msg.sender_id === user?.id ? 'msg-me' : 'msg-them'}`}>
+                                            {msg.sender_id !== user?.id && (
                                                 <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
                                                     {getAvatar(activeChat.tag).icon}
                                                 </div>
                                             )}
                                             <div className="bubble-wrap">
-                                                <div className={`bubble ${msg.sender_id === (user?.id || 'me') ? 'bubble-me' : 'bubble-them'}`}>
+                                                <div className={`bubble ${msg.sender_id === user?.id ? 'bubble-me' : 'bubble-them'}`}>
                                                     {msg.text.startsWith("CALL_SIGNAL:") ? (
                                                         <div className="call-signal-msg">
+                                                            <div className="call-icon-pulse"><IconPhone /></div>
                                                             <p>Incoming {msg.text.split(':')[1]} call...</p>
-                                                            {msg.sender_id !== (user?.id || 'me') && (
-                                                                <button
-                                                                    className="btn-join-call"
-                                                                    onClick={() => {
-                                                                        setRoomID(msg.text.split(':')[2]);
-                                                                        setCallMode(msg.text.split(':')[1] as any);
-                                                                    }}
-                                                                >
-                                                                    Join Call
-                                                                </button>
+                                                            {msg.sender_id !== user?.id && (
+                                                                <button className="btn-join-call" onClick={() => { setRoomID(msg.text.split(':')[2]); setCallMode(msg.text.split(':')[1] as any); }}>Join Call</button>
                                                             )}
                                                         </div>
+                                                    ) : msg.text.startsWith("CALL_ENDED:") ? (
+                                                        <div className="call-ended-msg">
+                                                            <IconPhoneOff />
+                                                            <span>Call ended</span>
+                                                        </div>
                                                     ) : (
-                                                        msg.sender_id === 'ai_bot' ? (
-                                                            <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
-                                                        ) : (
-                                                            msg.text
-                                                        )
+                                                        msg.sender_id === 'ai_bot' ? <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div> : msg.text
                                                     )}
                                                 </div>
                                                 <span className="msg-time">{formatTime(msg.created_at)}</span>
                                             </div>
                                         </div>
                                     ))}
-
-                                    {isTyping && activeChat.tag === 'ai' && (
+                                    {isTyping && (
                                         <div className="msg-row msg-them">
-                                            <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
-                                                {getAvatar(activeChat.tag).icon}
-                                            </div>
-                                            <div className="bubble-wrap">
-                                                <div className="bubble bubble-them typing-indicator-bubble">
-                                                    <span></span><span></span><span></span>
-                                                </div>
-                                            </div>
+                                            <div className="bubble-wrap"><div className="bubble bubble-them">AI is typing...</div></div>
                                         </div>
                                     )}
                                     <div ref={messagesEndRef} />
                                 </div>
-
-                                {/* Compose */}
                                 <div className="compose-bar">
                                     <input
                                         className="compose-input"
                                         placeholder="Type a message..."
                                         value={input}
                                         onChange={e => setInput(e.target.value)}
-                                        onKeyDown={e => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                sendMessage();
-                                            }
-                                        }} />
-                                    <button className="btn-send" onClick={sendMessage} disabled={!input.trim()}>
-                                        <IconSend /> <span>Send</span>
-                                    </button>
+                                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                                    />
+                                    <button className="btn-send" onClick={sendMessage} disabled={!input.trim()}><IconSend /> <span>Send</span></button>
                                 </div>
                             </>
                         )}
@@ -402,337 +355,76 @@ export default function MessagesPage() {
                 )}
             </main>
 
+            {/* ── SIDEBAR ── */}
+            {activeChat && showParticipants && (
+                <aside className="participants-sidebar">
+                    <div className="sidebar-top"><h2 className="sidebar-title">Participants</h2></div>
+                    <div className="participants-list">
+                        {participants.map(p => (
+                            <div key={p.user_id} className="participant-item">
+                                <div className="avatar sm">{p.avatar_url ? <img src={p.avatar_url} /> : p.full_name[0]}</div>
+                                <div className="p-info">
+                                    <div className="p-name">{p.full_name}</div>
+                                    <div className="p-status">{p.user_id === user?.id ? "You" : "Active"}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </aside>
+            )}
+
             <style jsx>{`
-                .messages-root {
-                    display: flex;
-                    height: calc(100vh - 80px);
-                    background: #ffffff;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 16px;
-                    overflow: hidden;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-                    margin: 0;
-                }
-
-                /* ── SIDEBAR ── */
-                .msg-sidebar {
-                    width: 300px;
-                    flex-shrink: 0;
-                    display: flex;
-                    flex-direction: column;
-                    border-right: 1px solid #e5e7eb;
-                    background: #fafafa;
-                }
-                .sidebar-top {
-                    padding: 1.5rem 1.25rem 1rem;
-                    border-bottom: 1px solid #e5e7eb;
-                }
-                .sidebar-title {
-                    font-size: 1.1rem;
-                    font-weight: 700;
-                    color: #111827;
-                    margin: 0 0 1rem 0;
-                    letter-spacing: -0.01em;
-                }
-                .search-wrap {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    background: #f3f4f6;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 8px;
-                    padding: 8px 12px;
-                    color: #9ca3af;
-                }
-                .search-input {
-                    border: none;
-                    outline: none;
-                    background: transparent;
-                    font-size: 0.85rem;
-                    color: #111827;
-                    width: 100%;
-                }
-                .search-input::placeholder { color: #9ca3af; }
-
-                .chat-list {
-                    flex: 1;
-                    overflow-y: auto;
-                }
-                .chat-item-wrapper {
-                    display: flex;
-                    align-items: center;
-                    border-bottom: 1px solid #f3f4f6;
-                    background: transparent;
-                    transition: background 0.15s;
-                }
+                .messages-root { display: flex; height: calc(100vh - 80px); background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb; }
+                .msg-sidebar { width: 320px; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; background: #fafafa; }
+                .sidebar-top { padding: 1.25rem; border-bottom: 1px solid #e5e7eb; }
+                .sidebar-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+                .search-wrap { display: flex; align-items: center; gap: 0.5rem; background: #f3f4f6; padding: 8px 12px; border-radius: 8px; color: #9ca3af; }
+                .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 0.85rem; }
+                .chat-list { flex: 1; overflow-y: auto; }
+                .chat-item-wrapper { display: flex; align-items: center; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #f3f4f6; }
                 .chat-item-wrapper:hover { background: #f3f4f6; }
-                .chat-item-wrapper.active { background: #f0f9ff; border-left: 2px solid #111827; }
-
-                .chat-item {
-                    width: 100%;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.875rem;
-                    padding: 1rem 1.25rem;
-                    background: transparent;
-                    border: none;
-                    cursor: pointer;
-                    text-align: left;
-                    flex: 1;
-                    min-width: 0;
-                }
-                .btn-delete-msg {
-                    background: transparent;
-                    border: none;
-                    color: #9ca3af;
-                    padding: 0.5rem;
-                    cursor: pointer;
-                    border-radius: 6px;
-                    margin-right: 0.75rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s;
-                    opacity: 0;
-                }
-                .chat-item-wrapper:hover .btn-delete-msg {
-                    opacity: 1;
-                }
-                .btn-delete-msg:hover {
-                    color: #ef4444;
-                    background: #fee2e2;
-                }
-
-                .avatar {
-                    width: 40px; height: 40px;
-                    border-radius: 10px;
-                    display: flex; align-items: center; justify-content: center;
-                    flex-shrink: 0;
-                }
+                .chat-item-wrapper.active { background: #f0f9ff; border-left: 3px solid #111827; }
+                .chat-item { flex: 1; display: flex; gap: 0.75rem; padding: 1rem; min-width: 0; }
+                .avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+                .avatar img { width: 100%; height: 100%; object-fit: cover; }
                 .avatar.sm { width: 32px; height: 32px; border-radius: 8px; }
-
                 .chat-info { flex: 1; min-width: 0; }
                 .chat-meta { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
-                .chat-name { font-size: 0.875rem; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-                .chat-time { font-size: 0.7rem; color: #9ca3af; flex-shrink: 0; }
-                .chat-preview { font-size: 0.8rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; margin-top: 2px; }
-                .unread-badge {
-                    background: #111827; color: #fff;
-                    font-size: 0.65rem; font-weight: 700;
-                    padding: 2px 6px; border-radius: 10px;
-                    flex-shrink: 0;
-                }
-
-                /* ── MAIN PANEL ── */
-                .msg-main {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    min-width: 0;
-                    background: #ffffff;
-                }
-
-                .chat-header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 1.25rem 1.5rem;
-                    border-bottom: 1px solid #e5e7eb;
-                    background: #ffffff;
-                }
-                .chat-header-left { display: flex; align-items: center; gap: 0.875rem; }
-                .ch-name { font-size: 0.95rem; font-weight: 700; color: #111827; }
-                .ch-role { font-size: 0.75rem; color: #6b7280; font-weight: 500; margin-top: 1px; }
-
-                .chat-header-right { display: flex; align-items: center; gap: 0.75rem; }
-                
-                .btn-call {
-                    width: 36px; height: 36px; border-radius: 8px;
-                    display: flex; align-items: center; justify-content: center;
-                    background: transparent; border: 1px solid #e5e7eb; color: #4b5563;
-                    cursor: pointer; transition: all 0.2s;
-                }
-                .btn-call:hover { background: #f3f4f6; color: #111827; border-color: #d1d5db; }
-
-                .call-container {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    background: #111827;
-                    position: relative;
-                }
-                .btn-end-call {
-                    position: absolute;
-                    bottom: 2rem;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: #ef4444; color: white;
-                    border: none; border-radius: 20px;
-                    padding: 10px 24px; font-weight: 600; cursor: pointer;
-                    z-index: 10; font-size: 0.9rem;
-                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-                    transition: background 0.2s;
-                }
-                .btn-end-call:hover { background: #dc2626; }
-
-                .call-signal-msg {
-                    padding: 8px;
-                    text-align: center;
-                }
-                .call-signal-msg p {
-                    margin: 0 0 8px 0;
-                    font-size: 0.85rem;
-                    font-weight: 600;
-                    opacity: 0.9;
-                }
-                .btn-join-call {
-                    background: #10b981;
-                    color: white;
-                    border: none;
-                    padding: 6px 16px;
-                    border-radius: 6px;
-                    font-size: 0.8rem;
-                    font-weight: 700;
-                    cursor: pointer;
-                    transition: background 0.2s;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                }
-                .btn-join-call:hover {
-                    background: #059669;
-                }
-                .tag-co-founder { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
-                .tag-ai { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
-                .tag-investor { background: #e0f2fe; color: #0369a1; border-color: #7dd3fc; }
-
-                .messages-area {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding: 1.5rem;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                    background: #f9fafb;
-                }
-
-                .msg-row {
-                    display: flex;
-                    align-items: flex-end;
-                    gap: 0.625rem;
-                }
-                .msg-me {
-                    flex-direction: row-reverse;
-                }
-
-                .bubble-wrap { display: flex; flex-direction: column; max-width: 65%; }
-                .msg-me .bubble-wrap { align-items: flex-end; }
-
-                .bubble {
-                    padding: 0.75rem 1rem;
-                    border-radius: 16px;
-                    font-size: 0.9rem;
-                    line-height: 1.5;
-                }
-                .bubble-them {
-                    background: #ffffff;
-                    border: 1px solid #e5e7eb;
-                    color: #111827;
-                    border-bottom-left-radius: 4px;
-                }
-                .bubble-me {
-                    background: #111827;
-                    color: #ffffff;
-                    border-bottom-right-radius: 4px;
-                }
-                .msg-time {
-                    font-size: 0.65rem;
-                    color: #9ca3af;
-                    margin-top: 4px;
-                    padding: 0 4px;
-                }
-
-                /* ── COMPOSE ── */
-                .compose-bar {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                    padding: 1rem 1.25rem;
-                    border-top: 1px solid #e5e7eb;
-                    background: #ffffff;
-                }
-                .compose-input {
-                    flex: 1;
-                    border: 1px solid #d1d5db;
-                    border-radius: 10px;
-                    padding: 0.75rem 1rem;
-                    font-size: 0.9rem;
-                    color: #111827;
-                    outline: none;
-                    font-family: inherit;
-                    background: #f9fafb;
-                    transition: border-color 0.2s, box-shadow 0.2s;
-                }
-                .compose-input:focus { border-color: #111827; box-shadow: 0 0 0 1px #111827; background: #ffffff; }
-                .compose-input::placeholder { color: #9ca3af; }
-
-                .btn-send {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.5rem;
-                    padding: 0.75rem 1.25rem;
-                    background: #111827;
-                    color: #ffffff;
-                    border: none;
-                    border-radius: 10px;
-                    font-size: 0.875rem;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: background 0.2s;
-                    white-space: nowrap;
-                }
-                .btn-send:hover:not(:disabled) { background: #374151; }
-                .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
-
-                /* ── TYPING INDICATOR & MARKDOWN ── */
-                .typing-indicator-bubble {
-                    display: inline-flex; align-items: center; gap: 4px; padding: 0.75rem 1rem;
-                }
-                .typing-indicator-bubble span {
-                    display: block; width: 6px; height: 6px; background: #9ca3af; border-radius: 50%;
-                    animation: bounce 1.4s infinite ease-in-out both;
-                }
-                .typing-indicator-bubble span:nth-child(1) { animation-delay: -0.32s; }
-                .typing-indicator-bubble span:nth-child(2) { animation-delay: -0.16s; }
-                @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-                
-                .markdown-content :global(p) { margin-bottom: 0.5rem; }
-                .markdown-content :global(strong) { font-weight: 700; }
-                .markdown-content :global(ul), .markdown-content :global(ol) { padding-left: 1.5rem; margin-bottom: 0.5rem; }
-
-                /* ── EMPTY STATE ── */
-                .empty-state {
-                    flex: 1;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    color: #6b7280;
-                    gap: 0.75rem;
-                }
-                .empty-icon {
-                    width: 64px; height: 64px;
-                    background: #f3f4f6;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 16px;
-                    display: flex; align-items: center; justify-content: center;
-                    color: #9ca3af;
-                }
-                .empty-state h3 { font-size: 1rem; font-weight: 600; color: #111827; margin: 0; }
-                .empty-state p { font-size: 0.875rem; color: #6b7280; margin: 0; }
-
-                @media (max-width: 768px) {
-                    .msg-sidebar { width: 100%; }
-                    .messages-root { flex-direction: column; }
-                }
+                .chat-name { font-size: 0.875rem; font-weight: 600; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .chat-time { font-size: 0.7rem; color: #9ca3af; }
+                .chat-preview { font-size: 0.8rem; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+                .unread-badge { background: #111827; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; }
+                .btn-delete-msg { padding: 0.5rem; color: #9ca3af; border: none; background: transparent; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+                .chat-item-wrapper:hover .btn-delete-msg { opacity: 1; }
+                .msg-main { flex: 1; display: flex; flex-direction: column; background: #fff; min-width: 0; }
+                .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+                .chat-header-left { display: flex; align-items: center; gap: 0.75rem; }
+                .ch-name { font-size: 1rem; font-weight: 700; }
+                .ch-role { font-size: 0.75rem; color: #6b7280; }
+                .chat-header-right { display: flex; align-items: center; gap: 0.5rem; }
+                .btn-call { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #4b5563; background: transparent; }
+                .btn-call.active { background: #111827; color: #fff; }
+                .chat-tag-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+                .tag-group { background: #fef9c3; color: #854d0e; }
+                .tag-ai { background: #ede9fe; color: #7c3aed; }
+                .messages-area { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; background: #f9fafb; }
+                .msg-row { display: flex; gap: 0.75rem; max-width: 80%; }
+                .msg-me { align-self: flex-end; flex-direction: row-reverse; }
+                .bubble { padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+                .bubble-them { background: #fff; border: 1px solid #e5e7eb; }
+                .bubble-me { background: #111827; color: #fff; }
+                .msg-time { font-size: 0.65rem; color: #9ca3af; margin-top: 4px; display: block; }
+                .compose-bar { padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; display: flex; gap: 0.75rem; }
+                .compose-input { flex: 1; border: 1px solid #d1d5db; border-radius: 8px; padding: 0.6rem 1rem; outline: none; }
+                .btn-send { background: #111827; color: #fff; border: none; padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+                .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #9ca3af; }
+                .participants-sidebar { width: 260px; border-left: 1px solid #e5e7eb; background: #fafafa; }
+                .participant-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; }
+                .p-info { font-size: 0.85rem; }
+                .p-name { font-weight: 600; }
+                .p-status { font-size: 0.7rem; color: #6b7280; }
+                .call-container { flex: 1; background: #000; position: relative; }
+                .btn-end-call { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; }
             `}</style>
         </div>
     );

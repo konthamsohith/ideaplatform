@@ -23,7 +23,15 @@ async function main() {
         type TEXT DEFAULT 'dm',
         unread INTEGER DEFAULT 0,
         last_message TEXT,
-        last_message_at TIMESTAMPTZ DEFAULT NOW()
+        last_message_at TIMESTAMPTZ DEFAULT NOW(),
+        idea_id UUID REFERENCES ideas(id) ON DELETE CASCADE
+      );
+
+      CREATE TABLE IF NOT EXISTS profiles (
+        id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+        full_name TEXT,
+        avatar_url TEXT,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
       );
 
       CREATE TABLE IF NOT EXISTS chat_participants (
@@ -70,6 +78,7 @@ async function main() {
       ALTER TABLE chat_participants ENABLE ROW LEVEL SECURITY;
       ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
       ALTER TABLE collaboration_requests ENABLE ROW LEVEL SECURITY;
+      ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
       -- Policies for collaboration_requests
       DROP POLICY IF EXISTS "collab_req_select" ON collaboration_requests;
@@ -85,6 +94,16 @@ async function main() {
       CREATE POLICY "collab_req_update" ON collaboration_requests FOR UPDATE USING (
         EXISTS (SELECT 1 FROM ideas WHERE id = idea_id AND author_id = auth.uid())
       );
+
+      -- Policies for profiles
+      DROP POLICY IF EXISTS "profiles_select" ON profiles;
+      CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
+
+      DROP POLICY IF EXISTS "profiles_insert" ON profiles;
+      CREATE POLICY "profiles_insert" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+      DROP POLICY IF EXISTS "profiles_update" ON profiles;
+      CREATE POLICY "profiles_update" ON profiles FOR UPDATE USING (auth.uid() = id);
 
       -- Policies for chat_participants
       DROP POLICY IF EXISTS "chat_participants_select" ON chat_participants;

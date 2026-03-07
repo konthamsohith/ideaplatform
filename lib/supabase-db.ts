@@ -30,13 +30,21 @@ export interface Chat {
     updated_at: string;
     name: string;
     role: string;
-    tag: 'co-founder' | 'ai' | 'investor';
+    tag: 'ai' | 'investor' | 'co-founder' | 'group';
     type: 'dm' | 'group' | 'ai';
     unread: number;
     last_message?: string;
     last_message_at?: string;
+    idea_id?: string;
+    participants?: { user_id: string, full_name: string, avatar_url?: string }[];
 }
 
+export interface Profile {
+    id: string;
+    full_name: string;
+    avatar_url?: string;
+    updated_at: string;
+}
 export interface ChatMessage {
     id: number;
     chat_id: number;
@@ -226,14 +234,40 @@ export const getUserChats = async (userId: string) => {
 
         const chatIds = participation.map(p => p.chat_id);
 
-        const { data, error } = await supabase
+        const { data, error: chatsError } = await supabase
             .from("chats")
             .select("*")
             .in("id", chatIds)
+            .neq("type", "ai")
             .order("updated_at", { ascending: false });
 
-        if (error) throw error;
-        return data as Chat[];
+        if (chatsError) throw chatsError;
+
+        // Fetch participants for these chats to resolve names
+        const { data: participants, error: p2Error } = await supabase
+            .from("chat_participants")
+            .select(`
+                chat_id,
+                user_id,
+                profiles:user_id (full_name, avatar_url)
+            `)
+            .in("chat_id", chatIds);
+
+        if (p2Error) throw p2Error;
+
+        // Map participants to chats
+        const chatsWithParticipants = data.map(chat => ({
+            ...chat,
+            participants: participants
+                ?.filter(p => p.chat_id === chat.id)
+                .map(p => ({
+                    user_id: p.user_id,
+                    full_name: (p.profiles as any)?.full_name || "User",
+                    avatar_url: (p.profiles as any)?.avatar_url
+                }))
+        }));
+
+        return chatsWithParticipants as Chat[];
     } catch (error: any) {
         console.error("Error fetching user chats:", JSON.stringify(error, null, 2));
         return [];
@@ -330,7 +364,7 @@ export const getOrCreatePrivateChat = async (user1Id: string, user2Id: string, n
         // Otherwise create a new chat
         const { data: newChat, error: createError } = await supabase
             .from("chats")
-            .insert([{ name: name2, role: "Direct Message", tag: "co-founder", type: "dm" }])
+            .insert([{ name: name2 || "Private Message", role: "Direct Message", tag: "co-founder", type: "dm" }])
             .select()
             .single();
 
@@ -349,65 +383,6 @@ export const getOrCreatePrivateChat = async (user1Id: string, user2Id: string, n
     }
 };
 
-/**
- * Ensures the user has a personal AI assistant chat.
- */
-export const ensureAIChat = async (userId: string): Promise<number | null> => {
-    if (!supabase) return null;
-    try {
-        // 1. Check if user already has an AI chat participant record
-        const { data: existing, error: findError } = await supabase
-            .from("chat_participants")
-            .select("chat_id")
-            .eq("user_id", userId);
-
-        if (findError) throw findError;
-
-        const chatIds = existing.map(e => e.chat_id);
-        if (chatIds.length > 0) {
-            const { data: aiChat } = await supabase
-                .from("chats")
-                .select("id")
-                .in("id", chatIds)
-                .eq("type", "ai")
-                .limit(1)
-                .single();
-
-            if (aiChat) return aiChat.id;
-        }
-
-        // 2. Create new AI chat specifically for this user
-        const { data: newChat, error: createError } = await supabase
-            .from("chats")
-            .insert([{
-                name: "TWONNECT Assistant",
-                role: "AI Collaborator",
-                tag: "ai",
-                type: "ai",
-                last_message: "Hello! I'm your TWONNECT Assistant. How can I help you today?",
-                last_message_at: new Date().toISOString()
-            }])
-            .select()
-            .single();
-
-        if (createError) throw createError;
-
-        // 3. Add participant
-        await supabase.from("chat_participants").insert([
-            { chat_id: newChat.id, user_id: userId }
-        ]);
-
-        // 4. Add initial message in the table
-        await supabase.from("messages").insert([
-            { chat_id: newChat.id, text: "Hello! I'm your TWONNECT Assistant. How can I help you today?", sender_id: "ai_bot" }
-        ]);
-
-        return newChat.id as number;
-    } catch (error) {
-        console.error("Error in ensureAIChat:", JSON.stringify(error, null, 2));
-        return null;
-    }
-};
 
 export interface CollaborationRequest {
     id: number;
@@ -530,6 +505,73 @@ export const updateCollaborationRequestStatus = async (requestId: number, status
             .eq("id", requestId);
 
         if (error) throw error;
+
+        // If accepted, ensure a group chat exists for the project
+        if (status === 'accepted') {
+            const { data: request } = await supabase
+                .from("collaboration_requests")
+                .select("idea_id, user_id")
+                .eq("id", requestId)
+                .single();
+
+            if (request) {
+                // Check if group chat exists for this idea
+                const { data: existingChat } = await supabase
+                    .from("chats")
+                    .select("id")
+                    .eq("idea_id", request.idea_id)
+                    .eq("type", "group")
+                    .maybeSingle();
+
+                let chatId;
+                if (!existingChat) {
+                    // Get idea title
+                    const { data: idea } = await supabase.from("ideas").select("title, author_id").eq("id", request.idea_id).single();
+                    // Create group chat
+                    const { data: newChat, error: chatError } = await supabase
+                        .from("chats")
+                        .insert({
+                            name: `${idea?.title} (Team)`,
+                            role: "Project Group",
+                            tag: "group",
+                            type: "group",
+                            idea_id: request.idea_id,
+                            updated_at: new Date().toISOString()
+                        })
+                        .select()
+                        .single();
+
+                    if (newChat) {
+                        chatId = newChat.id;
+                        // Add owner and first collaborator
+                        await supabase.from("chat_participants").insert([
+                            { chat_id: chatId, user_id: idea?.author_id },
+                            { chat_id: chatId, user_id: request.user_id }
+                        ]);
+                    }
+                } else {
+                    chatId = existingChat.id;
+                    // Add new collaborator to existing group
+                    await supabase.from("chat_participants").upsert({
+                        chat_id: chatId,
+                        user_id: request.user_id
+                    });
+                    // Touch the chat to trigger real-time refresh for all participants
+                    await supabase.from("chats").update({ updated_at: new Date().toISOString() }).eq("id", chatId);
+                }
+
+                // --- ALSO CREATE PRIVATE DM ---
+                const { data: ideaDetail } = await supabase.from("ideas").select("author_id, author_name").eq("id", request.idea_id).single();
+                const { data: collabProfile } = await supabase.from("profiles").select("full_name").eq("id", request.user_id).single();
+
+                if (ideaDetail && collabProfile) {
+                    // Create exactly ONE DM for the pair. 
+                    // The UI will handle displaying the correct name based on who is viewing.
+                    await getOrCreatePrivateChat(ideaDetail.author_id, request.user_id, collabProfile.full_name);
+                }
+            }
+        }
+
         return true;
     } catch (error) {
         console.error("Error updating collaboration request status:", JSON.stringify(error, null, 2));
@@ -559,3 +601,45 @@ export const getUserCollaborationRequest = async (ideaId: string, userId: string
 };
 
 
+/**
+ * Fetches participants for a chat.
+ */
+export const getChatParticipants = async (chatId: number) => {
+    if (!supabase) return [];
+    try {
+        const { data, error } = await supabase
+            .from("chat_participants")
+            .select(`
+                user_id,
+                profiles (full_name, avatar_url)
+            `)
+            .eq("chat_id", chatId);
+
+        if (error) throw error;
+        return data.map(p => ({
+            user_id: p.user_id,
+            full_name: (p.profiles as any)?.full_name || "Unknown User",
+            avatar_url: (p.profiles as any)?.avatar_url
+        }));
+    } catch (error) {
+        console.error("Error fetching chat participants:", error);
+        return [];
+    }
+};
+
+/**
+ * Syncs user profile metadata.
+ */
+export const syncProfile = async (userId: string, fullName: string, avatarUrl?: string) => {
+    if (!supabase) return;
+    try {
+        await supabase.from("profiles").upsert({
+            id: userId,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error("Error syncing profile:", error);
+    }
+};

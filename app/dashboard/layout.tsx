@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { syncProfile } from "@/lib/supabase-db";
 
 // ── Premium SVG Icons ──────────────────────────────────────────
 const IconMarketplace = () => (
@@ -44,6 +45,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         await logout();
         router.push("/");
     };
+
+    React.useEffect(() => {
+        if (user) {
+            const name = user.user_metadata?.full_name || user.email || "User";
+            const avatar = user.user_metadata?.avatar_url;
+            syncProfile(user.id, name, avatar);
+        }
+    }, [user]);
 
     const fullName = user?.user_metadata?.full_name || user?.email || "User";
     const avatarUrl = user?.user_metadata?.avatar_url;
