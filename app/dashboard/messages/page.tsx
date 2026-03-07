@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/context/AuthContext";
 import dynamic from 'next/dynamic';
@@ -76,7 +76,7 @@ const formatTime = (dateStr: string | undefined) => {
 };
 
 // ── Component ──────────────────────────────────────────────────────
-export default function MessagesPage() {
+function MessagesContent() {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const [chats, setChats] = useState<Chat[]>([]);
@@ -427,5 +427,17 @@ export default function MessagesPage() {
                 .btn-end-call { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #ef4444; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; }
             `}</style>
         </div>
+    );
+}
+
+export default function MessagesPage() {
+    return (
+        <Suspense fallback={
+            <div className="messages-root" style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 500 }}>Loading Messages...</div>
+            </div>
+        }>
+            <MessagesContent />
+        </Suspense>
     );
 }
