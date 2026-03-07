@@ -42,7 +42,7 @@ export default function DashboardPage() {
     const userIdeasCount = ideas.filter(i => i.author_id === user?.id).length;
 
     const stats = [
-        { title: "Problems Dumped", value: ideas.length.toString(), icon: <IconList /> },
+        { title: "Total Ideas", value: ideas.length.toString(), icon: <IconList /> },
         { title: "Your Contributions", value: userIdeasCount.toString(), icon: <IconCollab /> },
         { title: "AI Refinement Active", value: "Enabled", icon: <IconSparkles /> },
         { title: "Potential Ventures", value: "Beta", icon: <IconRocket /> },
@@ -57,7 +57,7 @@ export default function DashboardPage() {
                         <p>Bridging real-world problems with actionable execution.</p>
                     </div>
                     <button className="btn-blue" style={{ borderRadius: "12px", padding: "0.8rem 1.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <IconPlus /> Dump a Problem
+                        <IconPlus /> Submit an Idea
                     </button>
                 </div>
             </header>
@@ -102,7 +102,7 @@ export default function DashboardPage() {
                             ))
                         )}
                         {!loading && ideas.length === 0 && (
-                            <p style={{ padding: "1rem", color: "#6b7280" }}>No ideas found. Be the first to dump a problem!</p>
+                            <p style={{ padding: "1rem", color: "#6b7280" }}>No ideas found. Be the first to submit an idea!</p>
                         )}
                     </div>
                 </div>

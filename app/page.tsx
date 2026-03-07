@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import HeroBg from "./components/HeroBg";
-import FeaturedProblems from "./components/FeaturedProblems";
 import WhyBuild from "./components/WhyBuild";
 import Testimonials from "./components/Testimonials";
 import FAQSection from "./components/FAQ";
@@ -43,12 +42,24 @@ export default function Home() {
         }
     };
 
-    if (loading || user) {
-        return <div style={{ minHeight: "100vh", background: "#050505" }} />;
-    }
+    // We handle the redirect in useEffect above.
+    // Instead of hiding the whole page (which caused the black flash),
+    // we let it render, ensuring a light background is always present.
 
     return (
         <main className="avanza-home">
+            {/* Light redirection overlay */}
+            {(loading || user) && (
+                <div style={{
+                    position: "fixed",
+                    inset: 0,
+                    backgroundColor: "#f0f7ff",
+                    zIndex: 9999,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                }} />
+            )}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -158,7 +169,6 @@ export default function Home() {
                 </div>
             </section>
 
-            <FeaturedProblems />
             <div id="why-build">
                 <WhyBuild />
             </div>

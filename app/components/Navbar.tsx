@@ -9,7 +9,7 @@ import Logo from "./Logo";
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [progress, setProgress] = useState(0);
-    const { user, logout } = useAuth();
+    const { user, loading, logout } = useAuth();
     const pathname = usePathname();
     const router = useRouter();
 
@@ -49,43 +49,48 @@ export default function Navbar() {
                         <Link href="/#faq-section">FAQ</Link>
                     </div>
                     <div className="navbar-actions">
-                        {user ? (
-                            <div className="nav-user-profile">
-                                {user.user_metadata?.avatar_url ? (
-                                    <img
-                                        src={user.user_metadata.avatar_url}
-                                        alt={user.user_metadata.full_name || ""}
-                                        className="nav-avatar"
-                                    />
-                                ) : (
-                                    <div className="nav-avatar initials-avatar" style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        background: "var(--blue)",
-                                        color: "white",
-                                        fontSize: "0.8rem",
-                                        fontWeight: "600"
-                                    }}>
-                                        {(user.user_metadata?.full_name || user.email || "U")
-                                            .split(' ')
-                                            .map((n: string) => n[0])
-                                            .join('')
-                                            .toUpperCase()
-                                            .slice(0, 2)}
-                                    </div>
-                                )}
-                                <button className="btn-ghost" onClick={handleLogout}>Sign Out</button>
-                            </div>
+                        {!loading ? (
+                            user ? (
+                                <div className="nav-user-profile">
+                                    {user.user_metadata?.avatar_url ? (
+                                        <img
+                                            src={user.user_metadata.avatar_url}
+                                            alt={user.user_metadata.full_name || ""}
+                                            className="nav-avatar"
+                                        />
+                                    ) : (
+                                        <div className="nav-avatar initials-avatar" style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            background: "var(--blue)",
+                                            color: "white",
+                                            fontSize: "0.8rem",
+                                            fontWeight: "600"
+                                        }}>
+                                            {(user.user_metadata?.full_name || user.email || "U")
+                                                .split(' ')
+                                                .map((n: string) => n[0])
+                                                .join('')
+                                                .toUpperCase()
+                                                .slice(0, 2)}
+                                        </div>
+                                    )}
+                                    <button className="btn-ghost" onClick={handleLogout}>Sign Out</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <Link href="/signin">
+                                        <button className="btn-blue" style={{ marginRight: "0.5rem" }}>Sign In</button>
+                                    </Link>
+                                    <Link href="/get-started">
+                                        <button className="btn-lime">Get Started</button>
+                                    </Link>
+                                </>
+                            )
                         ) : (
-                            <>
-                                <Link href="/signin">
-                                    <button className="btn-blue" style={{ marginRight: "0.5rem" }}>Sign In</button>
-                                </Link>
-                                <Link href="/get-started">
-                                    <button className="btn-lime">Get Started</button>
-                                </Link>
-                            </>
+                            // Fixed width placeholder to prevent layout shift
+                            <div style={{ width: "160px" }} />
                         )}
                     </div>
                 </div>

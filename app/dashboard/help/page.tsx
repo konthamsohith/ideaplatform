@@ -15,8 +15,8 @@ export default function HelpPage() {
                     <h3 style={{ marginBottom: "1rem" }}>Frequently Asked Questions</h3>
                     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                         <div>
-                            <h4 style={{ fontSize: "0.95rem", fontWeight: 700 }}>How do I &quot;dump&quot; a problem?</h4>
-                            <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>Click the &quot;Submit New Idea&quot; button in the sidebar and fill out the problem form.</p>
+                            <h4 style={{ fontSize: "0.95rem", fontWeight: 700 }}>How do I submit an idea?</h4>
+                            <p style={{ fontSize: "0.85rem", color: "#6b7280" }}>Click the &quot;Submit New Idea&quot; button in the sidebar and fill out the idea submission form.</p>
                         </div>
                         <div>
                             <h4 style={{ fontSize: "0.95rem", fontWeight: 700 }}>Is TWONNECT AI free to use?</h4>

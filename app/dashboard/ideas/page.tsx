@@ -31,7 +31,7 @@ export default function MyIdeasPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
                     <div>
                         <h1>My Ideas</h1>
-                        <p>Manage and track the problems you&apos;ve dumped and refined.</p>
+                        <p>Manage and track the ideas you&apos;ve submitted and refined.</p>
                     </div>
                 </div>
             </header>
@@ -75,9 +75,9 @@ export default function MyIdeasPage() {
                 )}
                 {!loading && ideas.length === 0 && (
                     <div className="chart-card" style={{ textAlign: "center", padding: "4rem" }}>
-                        <p style={{ color: "#6b7280" }}>You haven&apos;t dumped any problems yet.</p>
+                        <p style={{ color: "#6b7280" }}>You haven&apos;t submitted any ideas yet.</p>
                         <Link href="/dashboard/submit" className="btn-blue" style={{ marginTop: "1rem", display: "inline-block" }}>
-                            Dump Your First Problem
+                            Submit Your First Idea
                         </Link>
                     </div>
                 )}
