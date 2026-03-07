@@ -46,9 +46,10 @@ export default function MyIdeasPage() {
         if (!confirm("Are you sure you want to delete this idea?")) return;
         try {
             await deleteIdea(id);
-            setIdeas(ideas.filter(i => i.id !== id));
+            setIdeas(currentIdeas => currentIdeas.filter(i => i.id !== id));
         } catch (error) {
-            alert("Failed to delete idea.");
+            console.error("Delete failed:", error);
+            alert("Failed to delete idea. Please try again.");
         }
     };
 
