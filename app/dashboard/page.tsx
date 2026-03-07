@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { getCollaborativeIdeas, Idea } from "@/lib/supabase-db";
+import { getCollaborativeIdeas, getUserIdeas, Idea } from "@/lib/supabase-db";
 
 // ── Icons ──────────────────────────────────────────────────────
 const IconPlus = () => (
@@ -31,23 +31,31 @@ const IconTrendingUp = () => (
 export default function DashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const [ideas, setIdeas] = useState<Idea[]>([]);
+    const [userIdeas, setUserIdeas] = useState<Idea[]>([]);
     const [loading, setLoading] = useState(true);
 
-
     useEffect(() => {
-        async function fetchMarketplace() {
+        async function fetchDashboardData() {
             try {
                 const marketplaceIdeas = await getCollaborativeIdeas();
                 setIdeas(marketplaceIdeas);
+
+                if (user?.id) {
+                    const currentUserIdeas = await getUserIdeas(user.id);
+                    setUserIdeas(currentUserIdeas);
+                }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
             }
             setLoading(false);
         }
-        fetchMarketplace();
-    }, []);
 
-    const userIdeasCount = ideas.filter(i => i.author_id === user?.id).length;
+        if (!authLoading) {
+            fetchDashboardData();
+        }
+    }, [user?.id, authLoading]);
+
+    const userIdeasCount = userIdeas.length;
 
     return (
         <div className="dashboard-page clean-elite-v3">
@@ -87,7 +95,7 @@ export default function DashboardPage() {
                 {/* Venture Discovery Section */}
                 <section className="discovery-pane">
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                        <h3 style={{ fontSize: "1.25rem", fontWeight: 800 }}>Venture Discovery</h3>
+                        <h3 style={{ fontSize: "1.25rem", fontWeight: 600, letterSpacing: "-0.03em" }}>Venture Discovery</h3>
                         <div className="search-box">
                             <IconSearch />
                             <input type="text" placeholder="Search Registry..." />
@@ -128,26 +136,48 @@ export default function DashboardPage() {
                     {/* Project Momentum */}
                     <div className="sidebar-card momentum-card">
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                            <h4 style={{ margin: 0, fontWeight: 800 }}>Project Momentum</h4>
-                            <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#9ca3af" }}>2 ACTIVE SESSIONS</span>
+                            <h4 style={{ margin: 0, fontWeight: 600, letterSpacing: "-0.03em" }}>Project Momentum</h4>
+                            <span style={{ fontSize: "0.65rem", fontWeight: 800, color: "#9ca3af" }}>{userIdeasCount} ACTIVE SESSIONS</span>
                         </div>
                         <div className="momentum-list" style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                            {[
-                                { title: "Smart Grid Optimization", phase: "Prototype", status: "Active", progress: 65 },
-                                { title: "Eco-Sync Waste Mgmt", phase: "Validation", status: "On Hold", progress: 30 }
-                            ].map((proj, i) => (
-                                <div key={i} className="momentum-item">
-                                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
-                                        <span style={{ color: "#9ca3af" }}>{proj.phase}</span>
-                                        <span style={{ color: proj.status === "Active" ? "var(--lime)" : "#9ca3af" }}>● {proj.status}</span>
-                                    </div>
-                                    <div style={{ fontWeight: 700, fontSize: "0.95rem", marginBottom: "0.75rem" }}>{proj.title}</div>
-                                    <div className="progress-bg"><div style={{ width: `${proj.progress}%` }} /></div>
-                                </div>
-                            ))}
-                            <button className="btn-ghost-plus">
-                                <IconPlus /> Find New Project
-                            </button>
+                            {loading || authLoading ? (
+                                <div style={{ color: "#6b7280", fontSize: "0.9rem", textAlign: "center", padding: "1rem" }}>Evaluating Trajectories...</div>
+                            ) : userIdeasCount === 0 ? (
+                                <div style={{ color: "#6b7280", fontSize: "0.9rem", textAlign: "center", padding: "1rem", background: "#f9fafb", borderRadius: "8px" }}>No active projects yet.</div>
+                            ) : (
+                                userIdeas.slice(0, 3).map((idea, i) => {
+                                    let phase = "Ideation";
+                                    let progress = 30;
+                                    let statusColor = "#9ca3af";
+                                    let statusLabel = idea.status;
+
+                                    if (idea.status === "Refinement") {
+                                        phase = "Validation";
+                                        progress = 65;
+                                        statusColor = "var(--blue)";
+                                    } else if (idea.status === "Collaborative") {
+                                        phase = "Scale Phase";
+                                        progress = 90;
+                                        statusColor = "var(--lime)";
+                                    }
+
+                                    return (
+                                        <div key={i} className="momentum-item">
+                                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", marginBottom: "0.5rem" }}>
+                                                <span style={{ color: "#9ca3af" }}>{phase}</span>
+                                                <span style={{ color: statusColor }}>● {statusLabel}</span>
+                                            </div>
+                                            <div style={{ fontWeight: 600, fontSize: "0.95rem", marginBottom: "0.75rem", letterSpacing: "-0.03em" }}>{idea.title}</div>
+                                            <div className="progress-bg"><div style={{ width: `${progress}%`, background: statusColor }} /></div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                            <Link href="/dashboard/submit" style={{ textDecoration: "none" }}>
+                                <button className="btn-ghost-plus">
+                                    <IconPlus /> Find New Project
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </aside>
@@ -234,7 +264,7 @@ export default function DashboardPage() {
                 }
                 .row-main h4 {
                     font-size: 1.1rem;
-                    font-weight: 800;
+                    font-weight: 500;
                     margin: 0;
                     color: #111827;
                 }
