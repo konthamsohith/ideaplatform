@@ -44,9 +44,9 @@ export default function Navbar() {
                         <Logo />
                     </Link>
                     <div className="navbar-links">
-                        <Link href="/#why-build">About</Link>
+                        <Link href="/#about">About</Link>
                         <Link href="/blog">Blog</Link>
-                        <Link href="/#faq-section">FAQ</Link>
+                        <Link href="/faq">FAQ</Link>
                     </div>
                     <div className="navbar-actions">
                         {!loading ? (

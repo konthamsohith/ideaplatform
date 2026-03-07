@@ -1,14 +1,21 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import HeroBg from "./components/HeroBg";
-import WhyBuild from "./components/WhyBuild";
-import Testimonials from "./components/Testimonials";
-import FAQSection from "./components/FAQ";
 import SmoothScroll from "./components/SmoothScroll";
+import HeroBg from "./components/HeroBg";
+
+// New Landing Page Components
+import HeroSection from "./components/landing/HeroSection";
+import TheProblemSection from "./components/landing/TheProblemSection";
+import HowItWorksSection from "./components/landing/HowItWorksSection";
+import AIValidationSection from "./components/landing/AIValidationSection";
+import ExploreProblemsSection from "./components/landing/ExploreProblemsSection";
+import UserValueSection from "./components/landing/UserValueSection";
+import StatsSection from "./components/landing/StatsSection";
+import FinalCTASection from "./components/landing/FinalCTASection";
+import AboutSection from "./components/landing/AboutSection";
 
 export default function Home() {
     const { user, loading } = useAuth();
@@ -24,6 +31,7 @@ export default function Home() {
         document.documentElement.classList.add('hide-scrollbar');
         return () => document.documentElement.classList.remove('hide-scrollbar');
     }, []);
+
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -42,12 +50,8 @@ export default function Home() {
         }
     };
 
-    // We handle the redirect in useEffect above.
-    // Instead of hiding the whole page (which caused the black flash),
-    // we let it render, ensuring a light background is always present.
-
     return (
-        <main className="avanza-home">
+        <main className="avanza-home" style={{ position: 'relative', overflowX: 'hidden' }}>
             {/* Light redirection overlay */}
             {(loading || user) && (
                 <div style={{
@@ -64,118 +68,20 @@ export default function Home() {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
+
             <HeroBg />
             <SmoothScroll />
 
-            <section className="avanza-hero text-center">
-                <div className="badge-pill mb-4 mx-auto">
-                    <span className="badge-new">NEW</span>
-                    <span>AI-Powered Startup Refinement</span>
-                </div>
-
-                <h1 className="hero-title">
-                    Build YC-Ready Startups & <br />
-                    Secure Angel Investment
-                </h1>
-
-                <p className="hero-subtitle">
-                    The bridge between real-world problem statements and Y Combinator-ready solutions.
-                    Collaborate, validate, and scale with TWONNECT.
-                </p>
-
-            </section>
-
-            <section className="bento-container container">
-                <h2 className="sr-only">Platform Benefits and Success Metrics</h2>
-                <div className="bento-grid">
-
-                    {/* Card 1: Platform Highlights */}
-                    <div className="bento-card bento-highlights">
-                        <div className="card-header-clean">
-                            <h3>Startup Ecosystem Highlights</h3>
-                            <p>Direct access to validated market gaps and investor-ready metrics.</p>
-                        </div>
-                        <div className="highlights-mosaic">
-                            <div className="mosaic-box box-1">
-                                <div className="fake-ui-line"></div>
-                                <div className="fake-ui-bar w-50"></div>
-                                <div className="fake-ui-bar w-75"></div>
-                            </div>
-                            <div className="mosaic-box box-2">
-                                <div className="bignumber">14K</div>
-                            </div>
-                            <div className="mosaic-box box-3">
-                                <div className="pie-chart"></div>
-                            </div>
-                            <div className="mosaic-box box-4">
-                                <div className="fake-avatar"></div>
-                                <div className="fake-avatar"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Middle Column */}
-                    <div className="bento-col-middle">
-                        {/* Card 2: 30K+ Students */}
-                        <div className="bento-card bento-stat">
-                            <div className="stat-flex">
-                                <div>
-                                    <h3>4,200+</h3>
-                                    <p>Validated problem statements</p>
-                                </div>
-                                <div className="avatars-group">
-                                    <div className="avatar bg-blue"></div>
-                                    <div className="avatar bg-orange"></div>
-                                    <div className="avatar bg-purple"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Card 3: 1200+ Hours */}
-                        <div className="bento-card bento-image-stat">
-                            <div className="image-bg-placeholder">
-                                <div className="stat-overlay">
-                                    <h3>$12M+</h3>
-                                    <p>Angel investment secured</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card 4: Success Stories */}
-                    <div className="bento-card bento-success">
-                        <h3>Founder Success Stories</h3>
-                        <div className="success-image-placeholder"></div>
-                        <div className="success-quote">
-                            <p>&quot;95% of our validated startup ideas secure co-founders or angel investment within 6 months.&quot;</p>
-                            <div className="author-info">
-                                <strong>Selena Arthur</strong>
-                                <span>Lead Startup Mentor at TWONNECT</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card 5: Affordable Learning */}
-                    <div className="bento-card bento-affordable">
-                        <div className="affordable-text">
-                            <h3>Y Combinator Preparation</h3>
-                            <p>Build the specific traction and validation required for top-tier accelerators like YC.</p>
-                        </div>
-                        <div className="affordable-btn">
-                            <button className="btn-lime">Contact Mentor</button>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-            <div id="why-build">
-                <WhyBuild />
-            </div>
-            <Testimonials />
-            <div id="faq-section">
-                <h2 className="sr-only">Frequently Asked Questions</h2>
-                <FAQSection />
+            <div style={{ position: 'relative', zIndex: 10 }}>
+                <HeroSection />
+                <TheProblemSection />
+                <HowItWorksSection />
+                <AIValidationSection />
+                <ExploreProblemsSection />
+                <UserValueSection />
+                <StatsSection />
+                <FinalCTASection />
+                <AboutSection />
             </div>
         </main>
     );
