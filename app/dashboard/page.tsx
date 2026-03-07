@@ -274,7 +274,7 @@ export default function DashboardPage() {
                     margin: 0.25rem 0 0;
                     line-height: 1.5;
                 }
-                .btn-workspace {
+                :global(.btn-workspace) {
                     padding: 0.75rem 1.25rem;
                     border: 1px solid #e5e7eb;
                     border-radius: 10px;
@@ -286,8 +286,9 @@ export default function DashboardPage() {
                     white-space: nowrap;
                     margin-left: 2rem;
                     transition: all 0.2s;
+                    color: #111827;
                 }
-                .btn-workspace:hover {
+                :global(.btn-workspace:hover) {
                     background: #111827;
                     color: white;
                     border-color: #111827;

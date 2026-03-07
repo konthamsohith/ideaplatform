@@ -1,444 +1,625 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/context/AuthContext";
 
 // ── Icons ──────────────────────────────────────────────────────
 const IconAI = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2V4" /><path d="M12 20V22" /><path d="M4.93 4.93L6.34 6.34" /><path d="M17.66 17.66L19.07 19.07" /><path d="M2 12H4" /><path d="M20 12H22" /><path d="M4.93 19.07L6.34 17.66" /><path d="M17.66 6.34L19.07 4.93" /><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" /></svg>
 );
-const IconCheck = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-);
-const IconBarChart = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
-);
-const IconShield = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
-);
-const IconZap = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
-);
 const IconArrowRight = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
 );
-const IconAlert = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+const IconPlus = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+);
+const IconMessage = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+);
+const IconTrash = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
 );
 
-type SandboxState = "landing" | "input" | "analyzing" | "results" | "error";
+// ── Types ──────────────────────────────────────────────────────
+type Role = "user" | "assistant" | "system";
 
-interface AuditResult {
-    marketFit: { value: string; description: string };
-    scalability: { value: string; description: string };
-    feasibility: { value: string; description: string };
-    disruptionScore: number;
-    landscape: {
-        status: string;
-        competitors: string[];
-        similarities: string;
-        differences: string;
-    };
-    summary: string;
+interface ChatMessage {
+    id: string;
+    role: Role;
+    content: string;
+}
+
+interface ChatSession {
+    id: string;
+    title: string;
+    updatedAt: number;
+    messages: ChatMessage[];
 }
 
 export default function AISandboxPage() {
-    const [state, setState] = useState<SandboxState>("landing");
-    const [concept, setConcept] = useState("");
-    const [analysisStep, setAnalysisStep] = useState(0);
-    const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
-    const [auditHistory, setAuditHistory] = useState<{ concept: string; summary: string }[]>([]);
-    const [errorMsg, setErrorMsg] = useState("");
+    const { user } = useAuth();
+    const [sessions, setSessions] = useState<ChatSession[]>([]);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    const [inputValue, setInputValue] = useState("");
+    const [isTyping, setIsTyping] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
 
-    const steps = [
-        "Initializing Neural Registry...",
-        "Scouring Global Venture Databases...",
-        "Identifying Competitive Landscape...",
-        "Calculating Disruption Index...",
-        "Finalizing Venture Report..."
-    ];
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // Load from local storage on mount/auth
     useEffect(() => {
-        if (state === "analyzing") {
-            const stepInterval = setInterval(() => {
-                setAnalysisStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
-            }, 1500); // Slower for "deep" feel
+        if (!user) return; // Wait until user is loaded
 
-            const performAIAnalysis = async () => {
+        const storageKey = `twonnect_ai_sessions_${user.id}`;
+        const saved = localStorage.getItem(storageKey);
+
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setSessions(parsed);
+            } catch (e) {
+                console.error("Failed to parse sessions", e);
+            }
+        } else {
+            // Attempt to migrate existing general key if no user-specific key exists yet
+            const oldSaved = localStorage.getItem("twonnect_ai_sessions");
+            if (oldSaved) {
                 try {
-                    const response = await fetch("/api/analyze", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ concept, history: auditHistory }),
-                    });
+                    const parsed = JSON.parse(oldSaved);
+                    setSessions(parsed);
+                    // Option to remove the old generic one
+                    localStorage.removeItem("twonnect_ai_sessions");
+                } catch (e) { }
+            } else {
+                setSessions([]);
+            }
+        }
+        setIsLoaded(true);
+    }, [user]);
 
-                    const data = await response.json();
+    // Save to local storage when sessions change
+    useEffect(() => {
+        if (isLoaded && user) {
+            const storageKey = `twonnect_ai_sessions_${user.id}`;
+            localStorage.setItem(storageKey, JSON.stringify(sessions));
+        }
+    }, [sessions, isLoaded, user]);
 
-                    if (!response.ok) {
-                        throw new Error(data.error || "Failed to audit concept");
-                    }
+    // Auto scroll to bottom
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [sessions, currentSessionId, isTyping]);
 
-                    setAuditResult(data);
-                    setAuditHistory(prev => [...prev, { concept, summary: data.summary }]);
-                    setState("results");
-                } catch (err: any) {
-                    setErrorMsg(err.message);
-                    setState("error");
-                }
+    const handleNewChat = () => {
+        setCurrentSessionId(null);
+        setInputValue("");
+    };
+
+    const handleDeleteChat = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        setSessions(prev => prev.filter(s => s.id !== id));
+        if (currentSessionId === id) {
+            setCurrentSessionId(null);
+            setInputValue("");
+        }
+    };
+
+    const currentSession = sessions.find(s => s.id === currentSessionId);
+
+    // Auto-resize textarea
+    const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setInputValue(e.target.value);
+        e.target.style.height = 'auto';
+        e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
+    };
+
+    const handleSubmit = async () => {
+        if (!inputValue.trim() || isTyping) return;
+
+        const newUserMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "user",
+            content: inputValue.trim(),
+        };
+
+        setInputValue("");
+        setIsTyping(true);
+
+        let activeSessionId = currentSessionId;
+        let activeSession = currentSession;
+
+        // Create new session if none active
+        if (!activeSessionId) {
+            activeSessionId = Date.now().toString();
+            activeSession = {
+                id: activeSessionId,
+                title: newUserMessage.content.substring(0, 30) + (newUserMessage.content.length > 30 ? "..." : ""),
+                updatedAt: Date.now(),
+                messages: [newUserMessage]
             };
 
-            performAIAnalysis();
-            return () => clearInterval(stepInterval);
+            setSessions(prev => [activeSession!, ...prev]);
+            setCurrentSessionId(activeSessionId);
+        } else {
+            // Update existing session with user message
+            setSessions(prev => prev.map(s => {
+                if (s.id === activeSessionId) {
+                    return {
+                        ...s,
+                        updatedAt: Date.now(),
+                        messages: [...s.messages, newUserMessage]
+                    };
+                }
+                return s;
+            }));
+            activeSession = {
+                ...activeSession!,
+                messages: [...activeSession!.messages, newUserMessage]
+            };
         }
-    }, [state, concept, auditHistory, steps.length]);
 
-    const handleStartAudit = () => setState("input");
-    const handleSubmitConcept = () => {
-        setAnalysisStep(0);
-        setState("analyzing");
+        // Fast formatting API payload
+        const apiMessages = activeSession!.messages.map(m => ({
+            role: m.role,
+            content: m.content
+        }));
+
+        const isNewScour = activeSession!.messages.length === 1;
+
+        try {
+            const response = await fetch("/api/deep-scour", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    messages: isNewScour ? [] : apiMessages.slice(0, -1), // Send previous history if not new
+                    concept: isNewScour ? newUserMessage.content : null // Send concept only if new
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to fetch AI response");
+            }
+
+            const newAiMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                role: "assistant",
+                content: data.reply || "No response generated.",
+            };
+
+            setSessions(prev => prev.map(s => {
+                if (s.id === activeSessionId) {
+                    return {
+                        ...s,
+                        updatedAt: Date.now(),
+                        messages: [...s.messages, newAiMessage]
+                    };
+                }
+                return s;
+            }));
+
+        } catch (error: any) {
+            console.error(error);
+            const errorMessage: ChatMessage = {
+                id: (Date.now() + 1).toString(),
+                role: "system",
+                content: `**Error**: ${error.message}. Please try again.`,
+            };
+            setSessions(prev => prev.map(s => {
+                if (s.id === activeSessionId) {
+                    return {
+                        ...s,
+                        updatedAt: Date.now(),
+                        messages: [...s.messages, errorMessage]
+                    };
+                }
+                return s;
+            }));
+        } finally {
+            setIsTyping(false);
+        }
     };
-    const handleReset = () => {
-        setState("landing");
-        setConcept("");
-        setAnalysisStep(0);
-        setAuditResult(null);
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+        }
     };
 
     return (
-        <div className="dashboard-page clean-elite-sandbox">
-            <header className="dashboard-header" style={{ marginBottom: "3rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                    <div>
-                        <h1 style={{ fontSize: "32px", fontWeight: 600, color: "#111827", letterSpacing: "-0.03em", lineHeight: "1" }}>AI Sandbox</h1>
-                        <p style={{ color: "#6b7280", marginTop: "0.5rem", fontSize: "1.1rem" }}>
-                            Powered by <span style={{ color: "var(--blue)", fontWeight: 700 }}>TWONNECT</span> • Deep Market Scouring Active.
-                        </p>
-                    </div>
-                    <span className="early-access-badge">
-                        ALPHA ACCESS
-                    </span>
-                </div>
-            </header>
+        <div className="sandbox-layout clean-elite-v3">
 
-            <div className="sandbox-canvas">
-                {/* ── LANDING VIEW ────────────────────────────────────── */}
-                {state === "landing" && (
-                    <section className="hero-card">
-                        <div className="hero-content">
-                            <div className="ai-status">
-                                <IconAI />
-                                <span>Deep Research Protocol: Active</span>
-                            </div>
-                            <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "1.5rem 0 1rem", color: "#111827" }}>
-                                Discover Your Unfair Advantage
-                            </h2>
-                            <p style={{ color: "#4b5563", lineHeight: "1.7", fontSize: "1.05rem", marginBottom: "2.5rem" }}>
-                                Scour the global internet for existing competitors, similarities, and market gaps.
-                                Get a verified **Disruption Score** and a detailed competitive landscape report.
-                            </p>
-                            <div className="hero-actions">
-                                <button className="btn-v3-primary" onClick={handleStartAudit}>
-                                    Initialize Deep Scour <IconArrowRight />
-                                </button>
-                                <button className="btn-v3-ghost">Research Methodology</button>
-                            </div>
-                        </div>
-                        <div className="hero-visual">
-                            <div className="orb-container">
-                                <div className="orb orb-main" />
-                                <div className="orb orb-sub" />
-                            </div>
-                        </div>
-                    </section>
-                )}
+            {/* ── SIDEBAR ───────────────────────────────────────────────── */}
+            <aside className="chat-sidebar">
+                <button className="btn-new-chat" onClick={handleNewChat}>
+                    <IconPlus /> New Deep Scour
+                </button>
 
-                {/* ── INPUT VIEW ──────────────────────────────────────── */}
-                {state === "input" && (
-                    <section className="input-card">
-                        <div style={{ padding: "3rem" }}>
-                            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: "0.5rem" }}>Intelligence Registry</h3>
-                            <p style={{ color: "#6b7280", marginBottom: "2rem" }}>TWONNECT will perform an exhaustive search of existing ventures to see if your concept already exists.</p>
-
-                            <div className="form-group">
-                                <label style={{ fontSize: "0.65rem", fontWeight: 800, color: "#9ca3af", textTransform: "uppercase", display: "block", marginBottom: "0.75rem" }}>
-                                    Startup Concept Details
-                                </label>
-                                <textarea
-                                    value={concept}
-                                    onChange={(e) => setConcept(e.target.value)}
-                                    placeholder="Describe your breakthrough concept. Be specific about your unique solution or architectural differentiator..."
-                                    style={{
-                                        width: "100%",
-                                        minHeight: "200px",
-                                        padding: "1.5rem",
-                                        borderRadius: "16px",
-                                        border: "1px solid #e5e7eb",
-                                        fontSize: "1rem",
-                                        outline: "none",
-                                        resize: "vertical",
-                                        background: "#f9fafb"
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginTop: "2rem" }}>
-                                <button className="btn-v3-ghost" onClick={() => setState("landing")}>Cancel</button>
+                <div className="history-list">
+                    <h4 className="sidebar-group-title">Previous Chats</h4>
+                    {sessions.length === 0 ? (
+                        <p style={{ fontSize: "0.85rem", color: "#9ca3af", padding: "0 1rem" }}>No previous investigations found.</p>
+                    ) : (
+                        sessions.map(ss => (
+                            <div key={ss.id} className={`history-item-wrapper ${ss.id === currentSessionId ? "active" : ""}`}>
                                 <button
-                                    className="btn-v3-primary"
-                                    disabled={!concept.trim()}
-                                    onClick={handleSubmitConcept}
+                                    className="history-item"
+                                    onClick={() => setCurrentSessionId(ss.id)}
                                 >
-                                    Launch Deep Market Scour
+                                    <IconMessage />
+                                    <span className="truncate">{ss.title}</span>
+                                </button>
+                                <button onClick={(e) => handleDeleteChat(e, ss.id)} className="btn-delete-chat">
+                                    <IconTrash />
                                 </button>
                             </div>
-                        </div>
-                    </section>
-                )}
+                        ))
+                    )}
+                </div>
+            </aside>
 
-                {/* ── ANALYZING VIEW ──────────────────────────────────── */}
-                {state === "analyzing" && (
-                    <section className="analyzing-card">
-                        <div style={{ textAlign: "center", padding: "5rem 2rem" }}>
-                            <div className="telemetry-orb research-orb" />
-                            <h3 style={{ fontSize: "1.75rem", fontWeight: 800, marginTop: "2rem" }}>Scouring Global Markets</h3>
-                            <p style={{ color: "#6b7280", fontSize: "1.1rem" }}>{steps[analysisStep]}</p>
-
-                            <div className="step-dots" style={{ display: "flex", justifyContent: "center", gap: "0.5rem", marginTop: "2.5rem" }}>
-                                {steps.map((_, i) => (
-                                    <div key={i} className={`dot ${i <= analysisStep ? 'active' : 'research-dot'}`} />
-                                ))}
-                            </div>
-                        </div>
-                    </section>
-                )}
-
-                {/* ── ERROR VIEW ──────────────────────────────────────── */}
-                {state === "error" && (
-                    <section className="error-card" style={{ border: "1px solid #fee2e2", background: "#fef2f2" }}>
-                        <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
-                            <div style={{ color: "#ef4444", marginBottom: "1.5rem" }}><IconAlert /></div>
-                            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "#991b1b" }}>Research Failure</h3>
-                            <p style={{ color: "#b91c1c", maxWidth: "400px", margin: "1rem auto 2.5rem", lineHeight: "1.6" }}>
-                                {errorMsg}
+            {/* ── MAIN CHAT AREA ────────────────────────────────────────── */}
+            <main className="chat-main">
+                <header className="chat-header">
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", width: "100%" }}>
+                        <div>
+                            <h1 style={{ fontSize: "28px", fontWeight: 600, color: "#111827", letterSpacing: "-0.03em", lineHeight: "1" }}>AI Sandbox</h1>
+                            <p style={{ color: "#6b7280", marginTop: "0.5rem", fontSize: "1rem" }}>
+                                Powered by <span style={{ color: "var(--blue)", fontWeight: 700 }}>TWONNECT</span> • Deep Market Scouring Active.
                             </p>
-                            <button className="btn-v3-primary" style={{ background: "#991b1b" }} onClick={() => setState("input")}>Try Again</button>
                         </div>
-                    </section>
-                )}
+                        <span className="early-access-badge">
+                            ALPHA ACCESS
+                        </span>
+                    </div>
+                </header>
 
-                {/* ── RESULTS VIEW ────────────────────────────────────── */}
-                {state === "results" && auditResult && (
-                    <section className="results-pane">
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "2rem", marginBottom: "3rem" }}>
-                            <div className="result-header-card">
-                                <h3 style={{ fontSize: "1.75rem", fontWeight: 800 }}>Venture Audit: <span style={{ color: "var(--blue)" }}>Final Report</span></h3>
-                                <p style={{ color: "#6b7280", marginTop: "0.5rem" }}>Market Scour Status: Success • Database Integrity: 100%</p>
-                            </div>
-                            <div className="disruption-card">
-                                <div className="disruption-value">{auditResult.disruptionScore}</div>
-                                <div className="disruption-label">Disruption Score</div>
+                <div className="chat-messages-container">
+                    {!currentSession || currentSession.messages.length === 0 ? (
+                        /* LANDING VIEW */
+                        <div className="landing-view">
+                            <div className="hero-content" style={{ maxWidth: "600px", margin: "0 auto", textAlign: "center", paddingTop: "4rem" }}>
+
+
+
+
+
+
                             </div>
                         </div>
-
-                        <div className="capabilities-grid">
-                            {[
-                                { title: "Market Fit", value: auditResult.marketFit.value, desc: auditResult.marketFit.description, icon: <IconBarChart />, color: "var(--blue)" },
-                                { title: "Scalability", value: auditResult.scalability.value, desc: auditResult.scalability.description, icon: <IconShield />, color: "var(--lime)" },
-                                { title: "Feasibility", value: auditResult.feasibility.value, desc: auditResult.feasibility.description, icon: <IconZap />, color: "#f59e0b" }
-                            ].map((cap, i) => (
-                                <div key={i} className="capability-card result-card">
-                                    <div className="cap-icon" style={{ color: cap.color }}>{cap.icon}</div>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                        <h4>{cap.title}</h4>
-                                        <span className="result-value" style={{ color: cap.color }}>{cap.value}</span>
+                    ) : (
+                        /* CHAT THREAD */
+                        <div className="chat-thread">
+                            {currentSession.messages.map(msg => (
+                                <div key={msg.id} className={`chat-bubble-wrapper ${msg.role}`}>
+                                    <div className="bubble-avatar">
+                                        {msg.role === "user" ? "ME" : <IconAI />}
                                     </div>
-                                    <p>{cap.desc}</p>
-                                    <div className="cap-footer"><IconCheck /> <span>Audit Verified</span></div>
+                                    <div className={`chat-bubble ${msg.role}`}>
+                                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                    </div>
                                 </div>
                             ))}
-                        </div>
-
-                        <div className="landscape-section" style={{ marginTop: "2rem" }}>
-                            <div className={`landscape-card ${auditResult.landscape.status === 'Saturated Market' ? 'card-saturated' : ''}`}>
-                                {auditResult.landscape.status === 'Saturated Market' && (
-                                    <div className="saturated-alert">
-                                        <div className="alert-badge"><IconAlert /> RED OCEAN DETECTED</div>
-                                        <p>This market segment is highly saturated with established players. High differentiation is critical for survival.</p>
-                                    </div>
-                                )}
-
-                                <div className="landscape-header">
-                                    <div>
-                                        <h4 style={{ fontWeight: 800, fontSize: "1.2rem" }}>Competitive Landscape Scour</h4>
-                                        <p style={{ color: "#6b7280", fontSize: "0.85rem", marginTop: "0.25rem" }}>Based on global venture registry analysis</p>
-                                    </div>
-                                    <span className={`status-tag ${auditResult.landscape.status === 'First-of-its-kind' ? 'tag-gold' :
-                                        auditResult.landscape.status === 'Saturated Market' ? 'tag-danger' : 'tag-neutral'
-                                        }`}>
-                                        {auditResult.landscape.status}
-                                    </span>
-                                </div>
-
-                                <div className="landscape-body">
-                                    <div className="landscape-grid-main">
-                                        <div className="landscape-column">
-                                            <div className="group-label">Identified Competitors</div>
-                                            <div className="competitor-grid">
-                                                {auditResult.landscape.competitors.map((c, i) => (
-                                                    <div key={i} className="competitor-node">
-                                                        <div className="node-dot"></div>
-                                                        <span>{c}</span>
-                                                    </div>
-                                                ))}
-                                                {auditResult.landscape.competitors.length === 0 && (
-                                                    <p style={{ fontSize: "0.9rem", color: "#9ca3af" }}>No direct entities identified.</p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="landscape-column">
-                                            <div className="group-label">Strategic Vectors</div>
-                                            <div className="vector-card similarities">
-                                                <div className="vector-header">
-                                                    <IconCheck /> <span>Shared Traits</span>
-                                                </div>
-                                                <p>{auditResult.landscape.similarities}</p>
-                                            </div>
-                                            <div className="vector-card differences">
-                                                <div className="vector-header">
-                                                    <IconZap /> <span>Differentiation Bridge</span>
-                                                </div>
-                                                <p>{auditResult.landscape.differences}</p>
-                                            </div>
-                                        </div>
+                            {isTyping && (
+                                <div className="chat-bubble-wrapper assistant typing">
+                                    <div className="bubble-avatar"><IconAI /></div>
+                                    <div className="chat-bubble assistant">
+                                        <div className="typing-indicator"><span></span><span></span><span></span></div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
+                            <div ref={messagesEndRef} />
                         </div>
+                    )}
+                </div>
 
-                        <div className="ai-feedback-box" style={{ marginTop: "2rem" }}>
-                            <h4 style={{ fontWeight: 800, marginBottom: "1rem" }}>Executive Summary</h4>
-                            <p style={{ color: "#4b5563", lineHeight: "1.7" }}>{auditResult.summary}</p>
-                        </div>
+                {/* ── INPUT AREA ────────────────────────────────────────────── */}
+                <div className="chat-input-wrapper">
+                    <div className="chat-input-inner">
+                        <textarea
+                            value={inputValue}
+                            onChange={handleTextareaInput}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Initialize Deep Scour: Type a startup concept, sector, or follow-up question..."
+                            rows={1}
+                        />
+                        <button
+                            className="btn-send"
+                            disabled={!inputValue.trim() || isTyping}
+                            onClick={handleSubmit}
+                        >
+                            <IconArrowRight />
+                        </button>
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "#9ca3af", textAlign: "center", marginTop: "0.5rem" }}>
+                        TWONNECT AI can make mistakes. Verify critical market data independently.
+                    </div>
+                </div>
+            </main>
 
-                        <div style={{ textAlign: "center", marginTop: "3rem" }}>
-                            <button className="btn-v3-ghost" style={{ padding: "0.75rem 2rem" }} onClick={handleReset}>Initiate New Research Session</button>
-                        </div>
-                    </section>
-                )}
-            </div>
-
+            {/* ── STYLES ────────────────────────────────────────────────── */}
             <style jsx>{`
-                .clean-elite-sandbox { max-width: 1400px; margin: 0 auto; }
+                .sandbox-layout {
+                    display: flex;
+                    height: 100vh;
+                    background: white;
+                    overflow: hidden;
+                    margin: 0; /* Full bleed */
+                    border: none;
+                }
+
+                /* Sidebar */
+                .chat-sidebar {
+                    width: 280px;
+                    background: #f9fafb;
+                    border-right: 1px solid #e5e7eb;
+                    display: flex;
+                    flex-direction: column;
+                    padding: 1.5rem 1rem;
+                    flex-shrink: 0;
+                }
+                .btn-new-chat {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    width: 100%;
+                    padding: 0.8rem 1rem;
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 12px;
+                    color: #111827;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+                }
+                .btn-new-chat:hover {
+                    border-color: #111827;
+                }
+                .history-list {
+                    margin-top: 2rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.25rem;
+                    overflow-y: auto;
+                }
+                .sidebar-group-title {
+                    font-size: 0.7rem;
+                    font-weight: 800;
+                    color: #9ca3af;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    padding: 0 1rem;
+                    margin-bottom: 0.75rem;
+                }
+                .history-item-wrapper {
+                    display: flex;
+                    align-items: center;
+                    background: transparent;
+                    border-radius: 10px;
+                    transition: all 0.15s;
+                }
+                .history-item-wrapper:hover {
+                    background: #f3f4f6;
+                }
+                .history-item-wrapper.active {
+                    background: white;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+
+                .history-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    padding: 0.75rem 1rem;
+                    background: transparent;
+                    border: none;
+                    color: #4b5563;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                    text-align: left;
+                    cursor: pointer;
+                    flex-grow: 1;
+                    min-width: 0;
+                }
+                .history-item-wrapper.active .history-item {
+                    color: #111827;
+                    font-weight: 700;
+                }
+
+                .btn-delete-chat {
+                    background: transparent;
+                    border: none;
+                    color: #9ca3af;
+                    padding: 0.5rem;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    margin-right: 0.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                    opacity: 0;
+                }
+                .history-item-wrapper:hover .btn-delete-chat {
+                    opacity: 1;
+                }
+                .btn-delete-chat:hover {
+                    color: #ef4444;
+                    background: #fee2e2;
+                }
+                .truncate {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                /* Main Chat Grid */
+                .chat-main {
+                    flex-grow: 1;
+                    display: flex;
+                    flex-direction: column;
+                    background: white;
+                    position: relative;
+                }
+                .chat-header {
+                    padding: 1.5rem 2.5rem;
+                    border-bottom: 1px solid #f3f4f6;
+                }
                 .early-access-badge {
                     font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;
                     color: var(--blue); background: rgba(0, 122, 255, 0.05);
                     padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(0, 122, 255, 0.1);
-                }
-
-                .hero-card, .input-card, .analyzing-card, .error-card, .landscape-card, .ai-feedback-box {
-                    background: white; border: 1px solid #e5e7eb; border-radius: 24px;
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-                }
-
-                .hero-card { padding: 4rem; display: grid; grid-template-columns: 1fr 300px; align-items: center; gap: 4rem; }
-                .ai-status { display: flex; align-items: center; gap: 0.75rem; color: var(--lime); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-                .btn-v3-primary {
-                    background: #111827; color: white; padding: 1rem 2.5rem; border-radius: 12px; font-weight: 800; border: none; cursor: pointer;
-                    transition: all 0.2s; box-shadow: 0 10px 20px -5px rgba(17, 24, 39, 0.2); display: flex; align-items: center; gap: 0.75rem;
-                }
-                .btn-v3-primary:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -10px rgba(17, 24, 39, 0.3); }
-                .btn-v3-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-                .btn-v3-ghost { background: transparent; color: #111827; padding: 1rem 2.5rem; border-radius: 12px; font-weight: 800; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; }
-                .btn-v3-ghost:hover { background: #f9fafb; border-color: #111827; }
-
-                .hero-visual { display: flex; justifyContent: center; align-items: center; }
-                .orb-container { position: relative; width: 200px; height: 200px; }
-                .orb { position: absolute; border-radius: 50%; filter: blur(40px); }
-                .orb-main { width: 100%; height: 100%; background: radial-gradient(circle, var(--lime) 0%, transparent 70%); opacity: 0.3; animation: pulse 4s infinite alternate; }
-                .orb-sub { width: 120%; height: 120%; top: -10%; left: -10%; background: radial-gradient(circle, var(--blue) 0%, transparent 70%); opacity: 0.1; animation: pulse 6s infinite alternate-reverse; }
-                
-                @keyframes pulse { from { transform: scale(1); opacity: 0.2; } to { transform: scale(1.3); opacity: 0.4; } }
-
-                .telemetry-orb {
-                    width: 80px; height: 80px; margin: 0 auto; border-radius: 50%;
-                    background: var(--blue); box-shadow: 0 0 30px var(--blue);
-                    animation: telemetry 2s infinite ease-in-out;
-                }
-                @keyframes telemetry { 0% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.3; transform: scale(0.8); } }
-
-                .dot { width: 8px; height: 8px; border-radius: 50%; background: #e5e7eb; transition: all 0.3s; }
-                .dot.active { background: var(--blue); box-shadow: 0 0 10px var(--blue); }
-
-                .disruption-card { background: #111827; border-radius: 20px; padding: 2rem; text-align: center; color: white; }
-                .disruption-value { font-size: 3rem; font-weight: 900; color: var(--lime); line-height: 1; }
-                .disruption-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin-top: 0.5rem; }
-
-                .capabilities-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-                .capability-card { background: white; border: 1px solid #e5e7eb; border-radius: 20px; padding: 2.25rem; transition: all 0.2s; }
-                .result-card:hover { border-color: var(--blue); transform: translateY(-5px); }
-                .cap-icon { margin-bottom: 1.5rem; }
-                .capability-card h4 { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem; color: #111827; }
-                .result-value { font-size: 0.7rem; font-weight: 900; text-transform: uppercase; padding: 3px 8px; background: #f9fafb; border-radius: 6px; }
-                .capability-card p { font-size: 0.9rem; color: #6b7280; line-height: 1.6; margin-bottom: 1.5rem; }
-                .cap-footer { display: flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #9ca3af; }
-
-                .landscape-card { padding: 0; overflow: hidden; }
-                .card-saturated { border: 2px solid #fee2e2; }
-                
-                .saturated-alert {
-                    background: #fee2e2; padding: 1rem 2.5rem; border-bottom: 1px solid #fecaca;
-                    display: flex; align-items: center; gap: 2rem;
-                }
-                .alert-badge {
-                    background: #ef4444; color: white; font-size: 0.65rem; font-weight: 900;
-                    padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;
                     white-space: nowrap;
                 }
-                .saturated-alert p { font-size: 0.85rem; color: #991b1b; font-weight: 600; margin: 0; }
 
-                .landscape-header { 
-                    display: flex; justify-content: space-between; align-items: center; 
-                    padding: 2rem 2.5rem; border-bottom: 1px solid #f3f4f6; 
+                .chat-messages-container {
+                    flex-grow: 1;
+                    overflow-y: auto;
+                    padding: 2rem 2.5rem 0rem;
                 }
-                .status-tag { font-size: 0.65rem; font-weight: 800; padding: 6px 12px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-                .tag-gold { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
-                .tag-danger { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
-                .tag-neutral { background: #f9fafb; color: #6b7280; border: 1px solid #e5e7eb; }
-
-                .landscape-body { padding: 2.5rem; }
-                .landscape-grid-main { display: grid; grid-template-columns: 350px 1fr; gap: 3rem; }
                 
-                .group-label { font-size: 0.7rem; font-weight: 800; color: #9ca3af; text-transform: uppercase; margin-bottom: 1.5rem; letter-spacing: 0.05em; }
-                
-                .competitor-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
-                .competitor-node {
-                    background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px 18px; 
-                    border-radius: 12px; display: flex; align-items: center; gap: 1rem;
-                    font-size: 0.95rem; font-weight: 700; color: #111827; transition: all 0.2s;
+                /* Landing Specific */
+                .orb-container { position: relative; width: 80px; height: 80px; margin: 0 auto; }
+                .telemetry-orb {
+                    width: 80px; height: 80px; border-radius: 50%;
+                    background: var(--blue); box-shadow: 0 0 40px var(--blue);
+                    animation: telemetry 3s infinite ease-in-out;
                 }
-                .competitor-node:hover { border-color: #111827; background: white; transform: translateX(5px); }
-                .node-dot { width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; }
-                .competitor-node:hover .node-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+                @keyframes telemetry { 0% { opacity: 0.3; transform: scale(0.9); } 50% { opacity: 0.8; transform: scale(1.1); } 100% { opacity: 0.3; transform: scale(0.9); } }
+                .ai-status { display: flex; align-items: center; gap: 0.75rem; color: var(--lime); font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+                .hero-actions { display: flex; gap: 1rem; }
+                .btn-v3-ghost { background: transparent; color: #111827; padding: 0.8rem 2rem; border-radius: 12px; font-weight: 800; border: 1px solid #e5e7eb; cursor: pointer; transition: all 0.2s; }
+                .btn-v3-ghost:hover { background: #f9fafb; border-color: #111827; }
 
-                .landscape-column { display: flex; flex-direction: column; }
-                .vector-card { background: #f9fafb; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; }
-                .vector-header { display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #111827; margin-bottom: 1rem; }
-                .vector-card p { font-size: 0.95rem; color: #4b5563; line-height: 1.6; margin: 0; }
+                /* Chat Thread */
+                .chat-thread {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    padding-bottom: 2rem;
+                }
+                .chat-bubble-wrapper {
+                    display: flex;
+                    gap: 1rem;
+                    max-width: 90%;
+                }
+                .chat-bubble-wrapper.user {
+                    align-self: flex-end;
+                    flex-direction: row-reverse;
+                }
+                .chat-bubble-wrapper.assistant {
+                    align-self: flex-start;
+                }
+                .bubble-avatar {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.65rem;
+                    font-weight: 900;
+                }
+                .user .bubble-avatar {
+                    background: #f3f4f6; color: #4b5563;
+                }
+                .assistant .bubble-avatar {
+                    background: var(--blue); color: white;
+                }
+
+                .chat-bubble {
+                    padding: 1rem 1.25rem;
+                    border-radius: 16px;
+                    font-size: 0.95rem;
+                    line-height: 1.6;
+                }
+                .chat-bubble.user {
+                    background: #f3f4f6;
+                    color: #111827;
+                    border-top-right-radius: 4px;
+                }
+                .chat-bubble.assistant {
+                    background: white;
+                    border: 1px solid #e5e7eb;
+                    color: #111827;
+                    border-top-left-radius: 4px;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+                }
+                .chat-bubble.system {
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    color: #991b1b;
+                }
                 
-                .similarities { border: 1px solid #e5e7eb; }
-                .differences { border: 1px solid rgba(0, 122, 255, 0.1); background: rgba(0, 122, 255, 0.02); }
+                /* Markdown Styling overriding inside chat bubble */
+                :global(.chat-bubble.assistant h1), :global(.chat-bubble.assistant h2), :global(.chat-bubble.assistant h3) {
+                    margin-top: 1rem; margin-bottom: 0.5rem; font-weight: 700; color: #111827;
+                }
+                :global(.chat-bubble.assistant h3) { font-size: 1.1rem; }
+                :global(.chat-bubble.assistant p) { margin-bottom: 0.75rem; }
+                :global(.chat-bubble.assistant ul), :global(.chat-bubble.assistant ol) { margin-left: 1.5rem; margin-bottom: 1rem; }
+                :global(.chat-bubble.assistant li) { margin-bottom: 0.25rem; }
+                :global(.chat-bubble.assistant strong) { font-weight: 700; color: #111827; }
 
-                .ai-feedback-box { padding: 2rem; }
+                /* Typing Indicator */
+                .typing-indicator {
+                    display: flex; align-items: center; gap: 4px; padding: 0.25rem 0.5rem;
+                }
+                .typing-indicator span {
+                    display: block; width: 6px; height: 6px; background: #9ca3af; border-radius: 50%;
+                    animation: bounce 1.4s infinite ease-in-out both;
+                }
+                .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+                .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+                @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
-                .research-orb { background: var(--blue); box-shadow: 0 0 40px var(--blue); }
-                .research-dot.active { background: var(--blue); }
+                /* Input Area */
+                .chat-input-wrapper {
+                    padding: 1.5rem 2.5rem;
+                    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, white 20%);
+                    position: sticky;
+                    bottom: 0;
+                }
+                .chat-input-inner {
+                    max-width: 800px; margin: 0 auto; position: relative;
+                    background: white; border: 1px solid #e5e7eb; border-radius: 16px;
+                    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+                    display: flex; align-items: flex-end; padding: 0.5rem;
+                    transition: border-color 0.2s;
+                }
+                .chat-input-inner:focus-within {
+                    border-color: var(--blue);
+                }
+                .chat-input-inner textarea {
+                    flex-grow: 1; border: none; outline: none; resize: none;
+                    background: transparent; padding: 0.75rem 1rem; font-size: 1rem; line-height: 1.5;
+                    max-height: 200px;
+                    font-family: inherit;
+                }
+                .btn-send {
+                    background: #111827; color: white; width: 40px; height: 40px; border-radius: 10px;
+                    display: flex; align-items: center; justify-content: center; border: none;
+                    cursor: pointer; transition: all 0.2s; flex-shrink: 0; margin-bottom: 4px; margin-right: 4px;
+                }
+                .btn-send:hover:not(:disabled) {
+                    background: var(--blue);
+                }
+                .btn-send:disabled {
+                    background: #f3f4f6; color: #9ca3af; cursor: not-allowed;
+                }
 
-                @media (max-width: 1100px) {
-                    .hero-card { grid-template-columns: 1fr; text-align: center; }
-                    .landscape-grid-main { grid-template-columns: 1fr; }
-                    .capabilities-grid { grid-template-columns: 1fr; }
-                    .disruption-card { margin-top: 1rem; }
-                    .saturated-alert { flex-direction: column; text-align: center; gap: 1rem; }
+                @media (max-width: 1024px) {
+                    .sandbox-layout { flex-direction: column; height: auto; border: none; }
+                    .chat-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e5e7eb; padding: 1rem; }
+                    .history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
+                    .chat-input-wrapper { padding: 1rem; }
                 }
             `}</style>
         </div>

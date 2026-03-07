@@ -127,7 +127,7 @@ export default function IdeaTableRow({ idea, onEdit, onDelete, onAudit }: IdeaTa
 
                 .idea-title {
                     font-size: 0.95rem;
-                    font-weight: 700;
+                    font-weight: 500;
                     color: #111827;
                     margin: 0 0 0.15rem 0;
                     letter-spacing: -0.01em;
@@ -161,8 +161,8 @@ export default function IdeaTableRow({ idea, onEdit, onDelete, onAudit }: IdeaTa
                 }
 
                 .metric-value {
-                    font-size: 1.1rem;
-                    font-weight: 800;
+                    font-size: 0.95rem;
+                    font-weight: 500;
                     color: #111827;
                     display: flex;
                     align-items: baseline;

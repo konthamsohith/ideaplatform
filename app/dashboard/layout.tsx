@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <main
                 className="main-content"
-                style={isSettingsPage ? { marginLeft: 0, padding: 0 } : {}}
+                style={(isSettingsPage || pathname === "/dashboard/ai-sandbox") ? { marginLeft: pathname === "/dashboard/ai-sandbox" ? undefined : 0, padding: 0 } : {}}
             >
                 {children}
             </main>

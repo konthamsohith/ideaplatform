@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-
+import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/context/AuthContext";
 // ── Icons ──────────────────────────────────────────────────────────
 const IconSend = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -32,6 +33,9 @@ const IconBriefcase = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
     </svg>
+);
+const IconTrash = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
 );
 
 // ── Types & Seed Data ──────────────────────────────────────────────
@@ -77,11 +81,36 @@ function getAvatar(tag: Chat['tag']) {
 
 // ── Component ──────────────────────────────────────────────────────
 export default function MessagesPage() {
+    const { user } = useAuth();
     const [chats, setChats] = useState<Chat[]>(INITIAL_CHATS);
     const [activeChatId, setActiveChatId] = useState<number | null>(null);
     const [search, setSearch] = useState("");
     const [input, setInput] = useState("");
+    const [isTyping, setIsTyping] = useState(false);
+    const [isLoaded, setIsLoaded] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!user) return;
+        const storageKey = `twonnect_messages_${user.id}`;
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                setChats(parsed);
+            } catch (e) {
+                console.error("Failed to load messages", e);
+            }
+        }
+        setIsLoaded(true);
+    }, [user]);
+
+    useEffect(() => {
+        if (isLoaded && user) {
+            const storageKey = `twonnect_messages_${user.id}`;
+            localStorage.setItem(storageKey, JSON.stringify(chats));
+        }
+    }, [chats, isLoaded, user]);
 
     const activeChat = chats.find(c => c.id === activeChatId) ?? null;
 
@@ -94,15 +123,59 @@ export default function MessagesPage() {
         setChats(prev => prev.map(c => c.id === id ? { ...c, unread: 0 } : c));
     };
 
-    const sendMessage = () => {
-        if (!input.trim() || !activeChatId) return;
+    const handleDeleteChat = (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
+        setChats(prev => prev.filter(c => c.id !== id));
+        if (activeChatId === id) {
+            setActiveChatId(null);
+        }
+    };
+
+    const sendMessage = async () => {
+        if (!input.trim() || !activeChatId || isTyping) return;
         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const newMsg: Message = { id: Date.now(), from: 'me', text: input.trim(), time: now };
+        const userText = input.trim();
+        const newMsg: Message = { id: Date.now(), from: 'me', text: userText, time: now };
+
         setChats(prev => prev.map(c => c.id === activeChatId
-            ? { ...c, messages: [...c.messages, newMsg], lastMsg: input.trim(), time: 'Just now' }
+            ? { ...c, messages: [...c.messages, newMsg], lastMsg: userText, time: 'Just now' }
             : c
         ));
         setInput("");
+
+        const currentActiveChat = chats.find(c => c.id === activeChatId);
+
+        // If talking to AI
+        if (currentActiveChat?.tag === 'ai') {
+            setIsTyping(true);
+            try {
+                const apiMessages = [...currentActiveChat.messages, newMsg].map(m => ({
+                    role: m.from === 'me' ? 'user' : 'assistant',
+                    content: m.text
+                }));
+
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ messages: apiMessages }),
+                });
+
+                const data = await response.json();
+
+                if (data.reply) {
+                    const aiNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const aiMsg: Message = { id: Date.now() + 1, from: 'them', text: data.reply, time: aiNow };
+                    setChats(prev => prev.map(c => c.id === activeChatId
+                        ? { ...c, messages: [...c.messages, aiMsg], lastMsg: "New response from AI", time: 'Just now', unread: 0 }
+                        : c
+                    ));
+                }
+            } catch (error) {
+                console.error("AI chat error", error);
+            } finally {
+                setIsTyping(false);
+            }
+        }
     };
 
     const filteredChats = chats.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
@@ -127,23 +200,27 @@ export default function MessagesPage() {
                     {filteredChats.map(chat => {
                         const av = getAvatar(chat.tag);
                         return (
-                            <button
-                                key={chat.id}
-                                className={`chat-item ${activeChatId === chat.id ? 'active' : ''}`}
-                                onClick={() => selectChat(chat.id)}
-                            >
-                                <div className="avatar" style={{ background: av.bg, color: av.color }}>{av.icon}</div>
-                                <div className="chat-info">
-                                    <div className="chat-meta">
-                                        <span className="chat-name">{chat.name}</span>
-                                        <span className="chat-time">{chat.time}</span>
+                            <div key={chat.id} className={`chat-item-wrapper ${activeChatId === chat.id ? 'active' : ''}`}>
+                                <button
+                                    className="chat-item"
+                                    onClick={() => selectChat(chat.id)}
+                                >
+                                    <div className="avatar" style={{ background: av.bg, color: av.color }}>{av.icon}</div>
+                                    <div className="chat-info">
+                                        <div className="chat-meta">
+                                            <span className="chat-name">{chat.name}</span>
+                                            <span className="chat-time">{chat.time}</span>
+                                        </div>
+                                        <div className="chat-meta">
+                                            <span className="chat-preview">{chat.lastMsg}</span>
+                                            {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
+                                        </div>
                                     </div>
-                                    <div className="chat-meta">
-                                        <span className="chat-preview">{chat.lastMsg}</span>
-                                        {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
-                                    </div>
-                                </div>
-                            </button>
+                                </button>
+                                <button onClick={(e) => handleDeleteChat(e, chat.id)} className="btn-delete-msg">
+                                    <IconTrash />
+                                </button>
+                            </div>
                         );
                     })}
                 </div>
@@ -179,11 +256,29 @@ export default function MessagesPage() {
                                         </div>
                                     )}
                                     <div className="bubble-wrap">
-                                        <div className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-them'}`}>{msg.text}</div>
+                                        <div className={`bubble ${msg.from === 'me' ? 'bubble-me' : 'bubble-them'}`}>
+                                            {activeChat.tag === 'ai' && msg.from === 'them' ? (
+                                                <div className="markdown-content"><ReactMarkdown>{msg.text}</ReactMarkdown></div>
+                                            ) : (
+                                                msg.text
+                                            )}
+                                        </div>
                                         <span className="msg-time">{msg.time}</span>
                                     </div>
                                 </div>
                             ))}
+                            {isTyping && activeChat.tag === 'ai' && (
+                                <div className="msg-row msg-them">
+                                    <div className="avatar sm" style={{ background: getAvatar(activeChat.tag).bg, color: getAvatar(activeChat.tag).color }}>
+                                        {getAvatar(activeChat.tag).icon}
+                                    </div>
+                                    <div className="bubble-wrap">
+                                        <div className="bubble bubble-them typing-indicator-bubble">
+                                            <span></span><span></span><span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
 
@@ -200,7 +295,7 @@ export default function MessagesPage() {
                                         sendMessage();
                                     }
                                 }} />
-                            <button className="btn-send" onClick={sendMessage} disabled={!input.trim()}>
+                            <button className="btn-send" onClick={sendMessage} disabled={!input.trim() || isTyping}>
                                 <IconSend /> <span>Send</span>
                             </button>
                         </div>
@@ -270,6 +365,16 @@ export default function MessagesPage() {
                     flex: 1;
                     overflow-y: auto;
                 }
+                .chat-item-wrapper {
+                    display: flex;
+                    align-items: center;
+                    border-bottom: 1px solid #f3f4f6;
+                    background: transparent;
+                    transition: background 0.15s;
+                }
+                .chat-item-wrapper:hover { background: #f3f4f6; }
+                .chat-item-wrapper.active { background: #f0f9ff; border-left: 2px solid #111827; }
+
                 .chat-item {
                     width: 100%;
                     display: flex;
@@ -278,13 +383,32 @@ export default function MessagesPage() {
                     padding: 1rem 1.25rem;
                     background: transparent;
                     border: none;
-                    border-bottom: 1px solid #f3f4f6;
                     cursor: pointer;
                     text-align: left;
-                    transition: background 0.15s;
+                    flex: 1;
+                    min-width: 0;
                 }
-                .chat-item:hover { background: #f3f4f6; }
-                .chat-item.active { background: #f0f9ff; border-left: 2px solid #111827; }
+                .btn-delete-msg {
+                    background: transparent;
+                    border: none;
+                    color: #9ca3af;
+                    padding: 0.5rem;
+                    cursor: pointer;
+                    border-radius: 6px;
+                    margin-right: 0.75rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.2s;
+                    opacity: 0;
+                }
+                .chat-item-wrapper:hover .btn-delete-msg {
+                    opacity: 1;
+                }
+                .btn-delete-msg:hover {
+                    color: #ef4444;
+                    background: #fee2e2;
+                }
 
                 .avatar {
                     width: 40px; height: 40px;
@@ -422,6 +546,22 @@ export default function MessagesPage() {
                 }
                 .btn-send:hover:not(:disabled) { background: #374151; }
                 .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+                /* ── TYPING INDICATOR & MARKDOWN ── */
+                .typing-indicator-bubble {
+                    display: inline-flex; align-items: center; gap: 4px; padding: 0.75rem 1rem;
+                }
+                .typing-indicator-bubble span {
+                    display: block; width: 6px; height: 6px; background: #9ca3af; border-radius: 50%;
+                    animation: bounce 1.4s infinite ease-in-out both;
+                }
+                .typing-indicator-bubble span:nth-child(1) { animation-delay: -0.32s; }
+                .typing-indicator-bubble span:nth-child(2) { animation-delay: -0.16s; }
+                @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+                
+                .markdown-content :global(p) { margin-bottom: 0.5rem; }
+                .markdown-content :global(strong) { font-weight: 700; }
+                .markdown-content :global(ul), .markdown-content :global(ol) { padding-left: 1.5rem; margin-bottom: 0.5rem; }
 
                 /* ── EMPTY STATE ── */
                 .empty-state {
