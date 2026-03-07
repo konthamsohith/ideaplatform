@@ -142,14 +142,19 @@ export default function SettingsPage() {
     const [connected, setConnected] = useState<Record<string, string | null>>({ github: null, leetcode: null, codechef: null });
 
     useEffect(() => {
-        if (user?.id) getUserProfile(user.id).then(d => { if (d) { setProfile(d); setDisplayName(d.display_name || ''); } });
+        if (user?.id) {
+            getUserProfile(user.id)
+                .then(d => { if (d) { setProfile(d); setDisplayName(d.display_name || ''); } })
+                .catch(err => console.error('Failed to fetch profile:', err));
+        }
         try {
             const acc = localStorage.getItem('connected_accounts'); if (acc) setConnected(JSON.parse(acc));
             const b = localStorage.getItem('user_bio'); if (b) { const p = JSON.parse(b); setBio(p.bio || ''); setRole(p.role || ''); setExp(p.exp || ''); setLocation(p.location || ''); setWebsite(p.website || ''); setSkills(p.skills || []); }
             const pr = localStorage.getItem('user_projects'); if (pr) setProjects(JSON.parse(pr));
-        } catch { }
+        } catch (err) {
+            console.error('Failed to load local storage data:', err);
+        }
     }, [user]);
-
     const saveProfile = async () => {
         if (!user?.id) return;
         setProfileSaving(true); setProfileMsg(null);
@@ -170,8 +175,9 @@ export default function SettingsPage() {
     const removeAcc = (k: string) => { const u = { ...connected, [k]: null }; setConnected(u); localStorage.setItem('connected_accounts', JSON.stringify(u)); };
     const handleLogout = async () => { await logout(); router.push('/'); };
 
-    const initials = displayName ? displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : (user?.email?.[0] || '?').toUpperCase();
-
+    const initials = displayName
+        ? displayName.split(' ').filter(w => w.length > 0).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+        : (user?.email?.[0] || '?').toUpperCase();
     return (
         <div className="s-root dashboard-page">
             <div className="s-layout">

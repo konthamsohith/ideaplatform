@@ -194,8 +194,12 @@ export default function MessagesPage() {
                                 placeholder="Type a message..."
                                 value={input}
                                 onChange={e => setInput(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                            />
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        sendMessage();
+                                    }
+                                }}                            />
                             <button className="btn-send" onClick={sendMessage} disabled={!input.trim()}>
                                 <IconSend /> <span>Send</span>
                             </button>
