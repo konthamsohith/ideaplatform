@@ -36,15 +36,6 @@
     flex-direction: column;
     height: 100%;
     position: relative;
-    overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-}
-
-.premium-collab-card:hover {
-    transform: translateY(-8px);
-    border-color: rgba(0, 122, 255, 0.3);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
 }
 
 .card-status-badge {
@@ -57,20 +48,11 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    background: rgba(187, 244, 81, 0.15);
+    background: rgba(187, 244, 81, 0.1);
     color: #5a7d10;
-    backdrop-filter: blur(4px);
     border: 1px solid rgba(187, 244, 81, 0.2);
 }
 
-.card-category {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.75rem;
-}
 
 .card-title {
     font-family: var(--font-geist-sans), "GeistSans Fallback", sans-serif;
@@ -141,16 +123,21 @@
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--black);
+    transition: color 0.2s ease;
 }
 
-.impact-badge {
+.interactive-meta:hover .meta-value {
     color: var(--primary);
-    font-weight: 700;
+}
+
+.interactive-meta:hover .team-avatars {
+    transform: translateX(4px);
 }
 
 .team-avatars {
     display: flex;
     align-items: center;
+    transition: transform 0.2s ease;
 }
 
 .team-avatar-icon {
@@ -177,24 +164,19 @@
     border-radius: 14px;
     font-weight: 600;
     font-size: 0.95rem;
-    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
 }
 
 .btn-collab-join.requested {
     background: var(--lime);
     color: var(--black);
+    cursor: default;
 }
 
 .btn-collab-join:not(.requested) {
     background: var(--black);
     color: var(--white);
-}
-
-.btn-collab-join:not(.requested):hover {
-    background: #2563eb;
-    /* A nice deep blue */
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 /* Header Premium Styles */
@@ -207,25 +189,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
-}
-
-.collab-header-premium::before {
-    content: "";
-    position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(187, 244, 81, 0.08) 0%, transparent 70%);
-    z-index: 0;
 }
 
 .header-content {
-    position: relative;
-    z-index: 1;
+    flex: 1;
 }
 
 .header-title {
@@ -240,43 +207,29 @@
 }
 
 .header-subtitle {
-    font-size: 1.15rem;
-    color: var(--muted);
-    max-width: 500px;
-    line-height: 1.5;
+    font-family: var(--font-geist-sans), "GeistSans Fallback", sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: rgb(107, 114, 128);
+    max-width: 550px;
+    line-height: 1.6;
+    margin-top: 8px;
 }
 
 .header-actions {
-    position: relative;
-    z-index: 1;
+    display: flex;
+    align-items: center;
 }
 
 .btn-premium-action {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: var(--black);
+    background: rgb(17, 17, 17);
     color: var(--white);
     padding: 1rem 2rem;
-    border-radius: 16px;
-    font-weight: 700;
+    border-radius: 12px;
+    font-weight: 600;
     font-size: 1rem;
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.btn-premium-action:hover {
-    background: var(--primary);
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 25px rgba(0, 122, 255, 0.25);
-}
-
-.btn-premium-action svg {
-    transition: transform 0.3s ease;
-}
-
-.btn-premium-action:hover svg {
-    transform: translateX(4px);
+    border: none;
+    cursor: pointer;
 }
 
 @media (max-width: 991px) {

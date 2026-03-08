@@ -23,6 +23,7 @@ export interface Idea {
     funding_required?: string | number;
     equity_offered?: string;
     amount_raised?: number;
+    team_profiles?: { full_name: string, avatar_url?: string }[];
 }
 
 export interface Chat {
@@ -199,19 +200,47 @@ export const deleteIdea = async (id: string) => {
     }
 };
 /**
- * Fetches all ideas marked as 'Collaborative'.
+ * Fetches all ideas marked as 'Collaborative' with their actual member counts.
  */
 export const getCollaborativeIdeas = async () => {
     if (!supabase) return [];
     try {
-        const { data, error } = await supabase
+        const { data: ideas, error } = await supabase
             .from("ideas")
             .select("*")
             .eq("status", "Collaborative")
             .order("created_at", { ascending: false });
 
         if (error) throw error;
-        return data as Idea[];
+
+        // Fetch actual member counts and profiles for each idea to ensure data is "original actual data"
+        const ideasWithActualCounts = await Promise.all(ideas.map(async (idea) => {
+            const { data: requests, count, error: countError } = await supabase
+                .from("collaboration_requests")
+                .select("*, profiles:user_id (full_name, avatar_url)", { count: "exact" })
+                .eq("idea_id", idea.id)
+                .eq("status", "accepted");
+
+            if (countError) {
+                console.error(`Error fetching members for idea ${idea.id}:`, countError);
+                return idea;
+            }
+
+            // Get up to 3 profiles for the card display
+            const team_profiles = requests?.slice(0, 3).map(r => ({
+                full_name: (r.profiles as any)?.full_name || "Collaborator",
+                avatar_url: (r.profiles as any)?.avatar_url
+            })) || [];
+
+            // Actual count is accepted collaborators + 1 (the author/lead)
+            return {
+                ...idea,
+                collaborators: (count || 0) + 1,
+                team_profiles
+            };
+        }));
+
+        return ideasWithActualCounts as Idea[];
     } catch (error) {
         console.error("Error fetching collaborative ideas:", JSON.stringify(error, null, 2));
         return [];
@@ -777,5 +806,81 @@ export const syncProfile = async (userId: string, fullName: string, avatarUrl?: 
         });
     } catch (error) {
         console.error("Error syncing profile:", error);
+    }
+};
+
+/**
+ * Fetches all accepted team members for a specific idea.
+ */
+export const getIdeaTeamMembers = async (ideaId: string) => {
+    if (!supabase) return [];
+    try {
+        // Get accepted collaboration requests
+        const { data, error } = await supabase
+            .from("collaboration_requests")
+            .select(`
+                user_id,
+                profiles:user_id (full_name, avatar_url)
+            `)
+            .eq("idea_id", ideaId)
+            .eq("status", "accepted");
+
+        if (error) throw error;
+
+        // Also get the idea owner
+        const { data: idea, error: ideaError } = await supabase
+            .from("ideas")
+            .select("author_id, profiles:author_id (full_name, avatar_url)")
+            .eq("id", ideaId)
+            .single();
+
+        if (ideaError) throw ideaError;
+
+        const owner = {
+            user_id: idea.author_id,
+            full_name: (idea.profiles as any)?.full_name || "Owner",
+            avatar_url: (idea.profiles as any)?.avatar_url,
+            is_owner: true
+        };
+
+        const collaborators = data.map(p => ({
+            user_id: p.user_id,
+            full_name: (p.profiles as any)?.full_name || "Collaborator",
+            avatar_url: (p.profiles as any)?.avatar_url,
+            is_owner: false
+        }));
+
+        return [owner, ...collaborators];
+    } catch (error) {
+        console.error("Error fetching idea team members:", error);
+        return [];
+    }
+};
+
+/**
+ * Fetches all collaboration requests (both pending and handled) for a specific idea.
+ */
+export const getCollaborationRequestsByIdea = async (ideaId: string) => {
+    if (!supabase) return [];
+    try {
+        const { data, error } = await supabase
+            .from("collaboration_requests")
+            .select(`
+                *,
+                profiles:user_id (full_name, avatar_url)
+            `)
+            .eq("idea_id", ideaId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        return data.map(req => ({
+            ...req,
+            user_full_name: (req.profiles as any)?.full_name,
+            user_avatar_url: (req.profiles as any)?.avatar_url
+        })) as CollaborationRequest[];
+    } catch (error) {
+        console.error("Error fetching requests for idea:", error);
+        return [];
     }
 };

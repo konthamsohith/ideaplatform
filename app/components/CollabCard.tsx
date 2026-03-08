@@ -8,12 +8,27 @@ interface CollabCardProps {
     impact: string;
     author: string;
     collaborators: number;
+    teamProfiles?: { full_name: string, avatar_url?: string }[];
     onJoin: () => void;
+    onManageTeam?: () => void;
     isRequested?: boolean;
+    isJoined?: boolean;
     isLoading?: boolean;
 }
 
-export default function CollabCard({ title, description, impact, author, collaborators, onJoin, isRequested, isLoading }: CollabCardProps) {
+export default function CollabCard({
+    title,
+    description,
+    impact,
+    author,
+    collaborators,
+    teamProfiles = [],
+    onJoin,
+    onManageTeam,
+    isRequested,
+    isJoined,
+    isLoading
+}: CollabCardProps) {
     const initials = author ? author.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : "??";
 
     return (
@@ -22,7 +37,6 @@ export default function CollabCard({ title, description, impact, author, collabo
                 ACTIVE
             </div>
 
-            <div className="card-category">Venture</div>
             <h3 className="card-title">{title}</h3>
 
             <div className="card-author">
@@ -35,15 +49,46 @@ export default function CollabCard({ title, description, impact, author, collabo
             </p>
 
             <div className="card-meta">
-                <div className="meta-item">
+                <div
+                    className="meta-item interactive-meta"
+                    onClick={onManageTeam}
+                    style={{ cursor: onManageTeam ? "pointer" : "default" }}
+                >
                     <span className="meta-label">Team size</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <span className="meta-value">{collaborators} Members</span>
                         {collaborators > 0 && (
                             <div className="team-avatars">
-                                {[...Array(Math.min(collaborators, 3))].map((_, i) => (
-                                    <div key={i} className="team-avatar-icon" style={{ zIndex: 3 - i }} />
-                                ))}
+                                {teamProfiles.length > 0 ? (
+                                    teamProfiles.slice(0, 3).map((profile, i) => (
+                                        <div
+                                            key={i}
+                                            className="team-avatar-icon"
+                                            style={{
+                                                zIndex: 10 - i,
+                                                background: "#f3f4f6",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontSize: "0.6rem",
+                                                fontWeight: 700,
+                                                color: "#6b7280"
+                                            }}
+                                            title={profile.full_name}
+                                        >
+                                            {profile.avatar_url ? (
+                                                <img src={profile.avatar_url} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%" }} />
+                                            ) : (
+                                                profile.full_name.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    /* Fallback if we have a count but no profiles yet */
+                                    [...Array(Math.min(collaborators, 3))].map((_, i) => (
+                                        <div key={i} className="team-avatar-icon" style={{ zIndex: 10 - i }} />
+                                    ))
+                                )}
                             </div>
                         )}
                     </div>
@@ -55,30 +100,18 @@ export default function CollabCard({ title, description, impact, author, collabo
             </div>
 
             <button
-                className={`btn-collab-join ${isRequested ? 'requested' : ''}`}
+                className={`btn-collab-join ${isRequested || isJoined ? 'requested' : ''}`}
                 onClick={onJoin}
-                disabled={isRequested || isLoading}
+                disabled={isRequested || isJoined || isLoading}
             >
                 {isLoading ? (
-                    <>
-                        <span className="loading-spinner"></span>
-                        Sending...
-                    </>
+                    "Sending..."
+                ) : isJoined ? (
+                    "Joined"
                 ) : isRequested ? (
-                    <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        Request Sent
-                    </>
+                    "Request Sent"
                 ) : (
-                    <>
-                        Join Project
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                    </>
+                    "Join Project"
                 )}
             </button>
         </div>

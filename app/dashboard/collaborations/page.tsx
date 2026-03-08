@@ -2,66 +2,87 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getCollaborativeIdeas, Idea, createCollaborationRequest, getUserCollaborationRequest } from "@/lib/supabase-db";
+import {
+    getCollaborativeIdeas,
+    Idea,
+    createCollaborationRequest,
+    getUserCollaborationRequest,
+    getOutboundCollaborationRequests,
+    CollaborationRequest
+} from "@/lib/supabase-db";
 import CollabCard from "@/app/components/CollabCard";
+import TeamManagementModal from "@/app/components/TeamManagementModal";
+import CollaborationModal from "@/app/components/CollaborationModal";
 import "./collaborations.css";
 
 export default function CollaborationsPage() {
     const { user, loading: authLoading } = useAuth();
     const [collaborativeIdeas, setCollaborativeIdeas] = useState<Idea[]>([]);
     const [loading, setLoading] = useState(true);
-    const [sentRequests, setSentRequests] = useState<Set<string>>(new Set());
-    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [sentRequests, setSentRequests] = useState<Record<string, 'pending' | 'accepted'>>({});
+
+    // Team Management Modal logic
+    const [selectedIdea, setSelectedIdea] = useState<{ id: string, title: string, isOwner: boolean } | null>(null);
+    // Join Project Modal logic
+    const [joiningIdea, setJoiningIdea] = useState<{ id: string, title: string } | null>(null);
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [ideas, outbound] = await Promise.all([
+                getCollaborativeIdeas(),
+                user ? getOutboundCollaborationRequests(user.id) : Promise.resolve([])
+            ]);
+
+            setCollaborativeIdeas(ideas);
+
+            // Map sent requests for quick lookup (both pending and accepted)
+            const requestsMap: Record<string, 'pending' | 'accepted'> = {};
+            outbound.forEach(req => {
+                if (req.status === 'pending' || req.status === 'accepted') {
+                    requestsMap[req.idea_id] = req.status;
+                }
+            });
+            setSentRequests(requestsMap);
+        } catch (error) {
+            console.error("Error fetching collaborative ideas:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            try {
-                const ideas = await getCollaborativeIdeas();
-                setCollaborativeIdeas(ideas);
-
-                if (user?.id) {
-                    // Check for existing requests to show "Requested" state
-                    const requests = await Promise.all(
-                        ideas.map(async (idea) => {
-                            const req = await getUserCollaborationRequest(idea.id!, user.id);
-                            return req ? idea.id! : null;
-                        })
-                    );
-                    setSentRequests(new Set(requests.filter((id): id is string => id !== null)));
-                }
-            } catch (error) {
-                console.error("Error fetching collaborative ideas:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
         if (!authLoading) {
             fetchData();
         }
     }, [authLoading, user?.id]);
 
-    const handleJoinRequest = async (ideaId: string) => {
-        if (!user?.id) return;
+    const handleJoinProject = async (message: string) => {
+        if (!user || !joiningIdea) return;
 
-        setActionLoading(ideaId);
         try {
-            const success = await createCollaborationRequest(ideaId, user.id, "Interested in joining this elite venture.");
-            if (success) {
-                setSentRequests(prev => new Set([...Array.from(prev), ideaId]));
-                alert("Collaboration request sent! The project owner will be notified.");
-            } else {
-                alert("Failed to send request. You might have already requested collaboration.");
+            const result = await createCollaborationRequest(joiningIdea.id, user.id, message);
+            if (result) {
+                setSentRequests(prev => {
+                    const next = { ...prev };
+                    next[joiningIdea.id] = 'pending';
+                    return next;
+                });
+                setJoiningIdea(null);
+                alert("Collaboration request sent successfully!");
             }
         } catch (error) {
-            console.error("Error sending join request:", error);
-        } finally {
-            setActionLoading(null);
+            console.error("Error joining project:", error);
+            alert("Failed to send collaboration request.");
         }
     };
 
-    // Filter projects for "Your Teams" (user is author)
+    // Handle data refresh after collaboration changes
+    const handleDataRefresh = async () => {
+        await fetchData();
+    };
+
+    // Filter projects
     const yourTeams = collaborativeIdeas.filter(idea => idea.author_id === user?.id);
     const discoverTeams = collaborativeIdeas.filter(idea => idea.author_id !== user?.id);
 
@@ -75,10 +96,6 @@ export default function CollaborationsPage() {
                 <div className="header-actions">
                     <button className="btn-premium-action" onClick={() => window.location.href = "/dashboard/submit"}>
                         Start a Collaborative Project
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
                     </button>
                 </div>
             </header>
@@ -102,14 +119,20 @@ export default function CollaborationsPage() {
                                         impact={idea.impact}
                                         author="You"
                                         collaborators={idea.collaborators || 0}
+                                        teamProfiles={idea.team_profiles}
                                         onJoin={() => alert("You are already the owner of this project!")}
+                                        onManageTeam={() => setSelectedIdea({
+                                            id: idea.id!,
+                                            title: idea.title,
+                                            isOwner: true
+                                        })}
                                     />
                                 ))}
                             </div>
                         </section>
                     )}
 
-                    {/* Discovery Section */}
+                    {/* Discover Section */}
                     <section>
                         <h2 className="section-title">Discover Open Collaborations</h2>
                         {discoverTeams.length > 0 ? (
@@ -122,21 +145,51 @@ export default function CollaborationsPage() {
                                         impact={idea.impact}
                                         author={idea.author_name}
                                         collaborators={idea.collaborators || 0}
-                                        onJoin={() => handleJoinRequest(idea.id!)}
-                                        isRequested={sentRequests.has(idea.id!)}
-                                        isLoading={actionLoading === idea.id}
+                                        teamProfiles={idea.team_profiles}
+                                        isRequested={sentRequests[idea.id!] === 'pending'}
+                                        isJoined={sentRequests[idea.id!] === 'accepted'}
+                                        onJoin={() => setJoiningIdea({ id: idea.id!, title: idea.title })}
+                                        onManageTeam={() => setSelectedIdea({
+                                            id: idea.id!,
+                                            title: idea.title,
+                                            isOwner: false
+                                        })}
                                     />
                                 ))}
                             </div>
                         ) : (
-                            <div className="card" style={{ textAlign: "center", padding: "5rem 2rem", background: "rgba(255,255,255,0.5)", borderStyle: "dashed" }}>
-                                <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🚀</div>
-                                <h3 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.5rem" }}>No open collaborations yet</h3>
-                                <p style={{ color: "#6b7280", maxWidth: "400px", margin: "0 auto" }}>Be the visionary who starts the next great project. Click "Start a Collaborative Project" to begin.</p>
+                            <div style={{ padding: "4rem 2rem", textAlign: "center", background: "#f9fafb", borderRadius: "24px", border: "1px dashed #e5e7eb" }}>
+                                <div style={{ fontSize: "2rem", marginBottom: "1rem" }}>🚀</div>
+                                <h3 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#111827", marginBottom: "0.5rem" }}>No open collaborations yet</h3>
+                                <p style={{ color: "#6b7280", maxWidth: "400px", margin: "0 auto", fontSize: "0.95rem" }}>
+                                    Be the visionary who starts the next great project. Click "Start a Collaborative Project" to begin.
+                                </p>
                             </div>
                         )}
                     </section>
                 </div>
+            )}
+
+            {/* Team Management Modal Overlay */}
+            {selectedIdea && (
+                <TeamManagementModal
+                    isOpen={!!selectedIdea}
+                    onClose={() => setSelectedIdea(null)}
+                    ideaId={selectedIdea.id}
+                    ideaTitle={selectedIdea.title}
+                    isOwner={selectedIdea.isOwner}
+                    onUpdate={handleDataRefresh}
+                />
+            )}
+
+            {/* Join Project Modal Overlay */}
+            {joiningIdea && (
+                <CollaborationModal
+                    isOpen={!!joiningIdea}
+                    onClose={() => setJoiningIdea(null)}
+                    ideaTitle={joiningIdea.title}
+                    onSend={handleJoinProject}
+                />
             )}
         </div>
     );
