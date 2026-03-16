@@ -98,8 +98,9 @@ export default function FinalCTASection() {
                         </p>
 
                         <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                            <Link href="/auth">
+                            <Link href="/signup">
                                 <button className="btn-get-started" style={{ padding: '1rem 3rem', fontSize: '1.05rem', background: 'var(--brand-lime)', color: 'black' }}>
+
                                     Get Started Free
                                 </button>
                             </Link>

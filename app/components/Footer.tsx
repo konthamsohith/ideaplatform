@@ -11,9 +11,9 @@ export default function Footer() {
     return (
         <footer className="ip-footer" style={{ borderTop: '1px solid var(--border-color)', background: 'white' }}>
             <div className="ip-footer-top">
-                <div className="ip-footer-brand">
+                <div className="ip-footer-brand" style={{ alignItems: 'flex-start' }}>
                     <div className="ip-footer-logo" style={{ marginBottom: '1.5rem' }}>
-                        <Logo style={{ fontSize: "1.4rem" }} />
+                        <Logo style={{ fontSize: "1.75rem" }} />
                     </div>
                     <p className="ip-footer-tagline" style={{ color: 'var(--muted)', maxWidth: '320px', lineHeight: 1.6 }}>
                         The all-in-one ecosystem for founders & builders.
@@ -49,8 +49,8 @@ export default function Footer() {
                         <ul>
                             <li><Link href="/privacy">Privacy Policy</Link></li>
                             <li><Link href="/terms">Terms of Service</Link></li>
-                            <li><Link href="/faq">FAQ</Link></li>
                         </ul>
+
                     </div>
                     <div className="ip-footer-col">
                         <h4 style={{ fontWeight: 800, color: 'var(--primary)', marginBottom: '1.5rem' }}>Connect</h4>
@@ -62,9 +62,9 @@ export default function Footer() {
                 </nav>
             </div>
 
-            <div className="ip-footer-bottom" style={{ borderTop: '1px solid rgba(15, 23, 42, 0.05)', padding: '2rem 0' }}>
+            <div className="ip-footer-bottom" style={{ borderTop: '1px solid rgba(15, 23, 42, 0.05)', padding: '2rem 0', justifyContent: 'flex-start', textAlign: 'left' }}>
                 <span className="ip-footer-copy" style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                    &copy; {new Date().getFullYear()} TWONNECT Engine. Built for the next generation of architects.
+                    &copy; {new Date().getFullYear()} TWONNECT.
                 </span>
             </div>
         </footer>

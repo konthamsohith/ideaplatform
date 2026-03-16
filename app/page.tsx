@@ -74,7 +74,9 @@ export default function Home() {
                 <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', width: '100%', margin: '0' }} />
                 <AboutSection />
                 <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', width: '100%', margin: '0' }} />
-                <FeaturesSection />
+                <div id="features">
+                    <FeaturesSection />
+                </div>
                 <AISection />
                 <FAQSection />
 

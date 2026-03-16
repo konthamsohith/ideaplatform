@@ -21,9 +21,10 @@ export default function FeaturesSection() {
                     variants={itemVariants}
                     style={{ textAlign: 'center', marginBottom: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                 >
-                    <h2 style={{ fontSize: '2.8rem', fontWeight: 800, color: '#111827', letterSpacing: '-0.04em', marginBottom: '0.75rem' }}>
+                    <h2 style={{ fontSize: '48px', fontWeight: 510, fontFamily: '"Inter Variable", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif', color: '#111827', letterSpacing: '-0.04em', lineHeight: '48px', marginBottom: '0.75rem' }}>
                         Why build with TWONNECT?
                     </h2>
+
                     <p style={{ maxWidth: '600px', fontSize: '1.05rem', color: '#6b7280', lineHeight: '1.5' }}>
                         Crafted to take you from direct domain expert friction to deep institutional-grade validation.
                     </p>
@@ -40,32 +41,92 @@ export default function FeaturesSection() {
                             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={itemVariants}
                             style={{ flex: 2, minWidth: '350px', background: '#ffffff', borderRadius: '24px', padding: '2.5rem', border: '1px solid #f3f4f6', boxShadow: '0 10px 30px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: '360px' }}
                         >
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', marginBottom: '0.4rem' }}>Vetted Domain Experts</h3>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', marginBottom: '0.4rem' }}>Vetted Experts</h3>
                             <p style={{ color: '#6b7280', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                                Connect with domain experts who submit real-world problem statements and budget-aligned market needs.
+                                Connect with domain experts submitting real-world problem statements.
                             </p>
-                            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                            <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+                                {/* Static Radar Grid */}
                                 <svg width="240" height="240" viewBox="0 0 240 240" style={{ opacity: 0.8 }}>
                                     <circle cx="120" cy="120" r="90" stroke="#f1f5f9" strokeWidth="1.5" strokeDasharray="6 6" fill="none" />
                                     <circle cx="120" cy="120" r="60" stroke="#f1f5f9" strokeWidth="1.5" strokeDasharray="6 6" fill="none" />
                                     <circle cx="120" cy="120" r="30" stroke="#f1f5f9" strokeWidth="1.5" strokeDasharray="6 6" fill="none" />
                                 </svg>
-                                <img src="https://i.pravatar.cc/100?u=a" style={{ position: 'absolute', top: '15%', left: '30%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} alt="" />
-                                <img src="https://i.pravatar.cc/100?u=b" style={{ position: 'absolute', top: '50%', left: '15%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} alt="" />
-                                <img src="https://i.pravatar.cc/100?u=c" style={{ position: 'absolute', top: '70%', right: '25%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} alt="" />
-                                <img src="https://i.pravatar.cc/100?u=d" style={{ position: 'absolute', top: '30%', right: '35%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} alt="" />
+                                
+                                {/* Orbit 1: Outer Layer (r=90) */}
+                                <motion.div 
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 25, ease: "linear", repeat: Infinity }}
+                                    style={{ position: 'absolute', width: '180px', height: '180px', top: '50%', left: '50%', x: '-50%', y: '-50%', borderRadius: '50%', pointerEvents: 'none' }}
+                                >
+                                    <motion.img 
+                                        src="https://i.pravatar.cc/100?u=a" 
+                                        animate={{ rotate: -360 }}
+                                        transition={{ duration: 25, ease: "linear", repeat: Infinity }}
+                                        style={{ position: 'absolute', top: 0, left: '50%', x: '-50%', y: '-50%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', cursor: 'pointer', pointerEvents: 'auto' }} alt="" 
+                                    />
+                                </motion.div>
+
+                                {/* Orbit 2: Middle Layer A (r=60) - Reverse */}
+                                <motion.div 
+                                    animate={{ rotate: -360 }}
+                                    transition={{ duration: 18, ease: "linear", repeat: Infinity }}
+                                    style={{ position: 'absolute', width: '120px', height: '120px', top: '50%', left: '50%', x: '-50%', y: '-50%', borderRadius: '50%', pointerEvents: 'none' }}
+                                >
+                                    <motion.img 
+                                        src="https://i.pravatar.cc/100?u=b" 
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 18, ease: "linear", repeat: Infinity }}
+                                        style={{ position: 'absolute', top: 0, left: '50%', x: '-50%', y: '-50%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', cursor: 'pointer', pointerEvents: 'auto' }} alt="" 
+                                    />
+                                </motion.div>
+
+                                {/* Orbit 3: Inner Layer (r=30) */}
+                                <motion.div 
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 22, ease: "linear", repeat: Infinity }}
+                                    style={{ position: 'absolute', width: '60px', height: '60px', top: '50%', left: '50%', x: '-50%', y: '-50%', borderRadius: '50%', pointerEvents: 'none' }}
+                                >
+                                    <motion.img 
+                                        src="https://i.pravatar.cc/100?u=c" 
+                                        animate={{ rotate: -360 }}
+                                        transition={{ duration: 22, ease: "linear", repeat: Infinity }}
+                                        style={{ position: 'absolute', top: 0, left: '50%', x: '-50%', y: '-50%', width: '32px', height: '32px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', cursor: 'pointer', pointerEvents: 'auto' }} alt="" 
+                                    />
+                                </motion.div>
+
+                                {/* Orbit 4: Middle Layer B (r=60) - Offset by 180 degrees */}
+                                <motion.div 
+                                    initial={{ rotate: 180 }}
+                                    animate={{ rotate: 180 - 360 }} // Orbiting backwards
+                                    transition={{ duration: 18, ease: "linear", repeat: Infinity }}
+                                    style={{ position: 'absolute', width: '120px', height: '120px', top: '50%', left: '50%', x: '-50%', y: '-50%', borderRadius: '50%', pointerEvents: 'none' }}
+                                >
+                                    <motion.img 
+                                        src="https://i.pravatar.cc/100?u=d" 
+                                        initial={{ rotate: -180 }}
+                                        animate={{ rotate: -180 + 360 }}
+                                        transition={{ duration: 18, ease: "linear", repeat: Infinity }}
+                                        style={{ position: 'absolute', top: 0, left: '50%', x: '-50%', y: '-50%', width: '36px', height: '36px', borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', cursor: 'pointer', pointerEvents: 'auto' }} alt="" 
+                                    />
+                                </motion.div>
                             </div>
+
+
                         </motion.div>
 
-                        {/* Card 2: Interactive Sandbox (Lime) */}
+                        {/* Card 2: Interactive Sandbox (Blue) */}
                         <motion.div 
                             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={itemVariants}
-                            style={{ flex: 1, minWidth: '250px', background: '#bef264', borderRadius: '24px', padding: '2.5rem', display: 'flex', flexDirection: 'column', minHeight: '360px', position: 'relative', overflow: 'hidden' }}
+                            style={{ flex: 1, minWidth: '250px', background: '#3b82f6', borderRadius: '24px', padding: '2.5rem', display: 'flex', flexDirection: 'column', minHeight: '360px', position: 'relative', overflow: 'hidden' }}
                         >
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#111827', marginBottom: '0.4rem' }}>AI Validation</h3>
-                            <p style={{ color: '#4b5563', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.4rem' }}>AI Validation</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
                                 Run AI-powered simulations to validate problem intensity and investor demand securely before building.
                             </p>
+
+
                             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(3, 1fr)', gap: '8px', padding: '1rem', background: 'rgba(255,255,255,0.2)', borderRadius: '16px', position: 'relative' }}>
                                 {[...Array(9)].map((_, i) => (
                                     <div key={i} style={{ background: 'rgba(255,255,255,0.4)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)' }} />

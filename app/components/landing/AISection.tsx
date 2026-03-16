@@ -10,7 +10,7 @@ export default function AISection() {
     };
 
     return (
-        <section className="ai-section" id="ai-features" style={{ padding: '6rem 1rem', background: '#fafafa', borderBottom: '1px solid #e5e7eb' }}>
+        <section className="ai-section" id="highlights" style={{ padding: '6rem 1rem', background: '#fafafa', borderBottom: '1px solid #e5e7eb' }}>
             <div className="container" style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 
                 {/* Section Header */}
@@ -18,9 +18,11 @@ export default function AISection() {
                     initial="hidden" whileInView="visible" viewport={{ once: true }} variants={itemVariants}
                     style={{ textAlign: 'center', marginBottom: '4rem', maxWidth: '600px' }}
                 >
-                    <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#111827', marginBottom: '1rem', letterSpacing: '-0.025em' }}>
+                    <h2 style={{ fontSize: '48px', fontWeight: 510, fontFamily: '"Inter Variable", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif', color: '#111827', marginBottom: '1rem', letterSpacing: '-0.04em', lineHeight: '48px' }}>
                         The future, enhanced by AI
                     </h2>
+
+
                     <p style={{ color: '#6b7280', fontSize: '1.05rem', lineHeight: '1.6' }}>
                         Harnessing the power of artificial intelligence to revolutionize co-founder matching, readines audits, and institutional funding cycles.
                     </p>
@@ -42,17 +44,31 @@ export default function AISection() {
                                 AI continuously scans top skill profiles to match you seamlessly with complementary builders.
                             </p>
                             
-                            <div style={{ flex: 1, background: '#f8fafc', borderRadius: '16px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid #e2e8f0' }}>
-                                <div style={{ background: '#ffffff', padding: '8px 10px', borderRadius: '12px', boxShadow: '0 2px 5px rgba(0,0,0,0.02)', display: 'flex', gap: '5px', alignItems: 'flex-start' }}>
+                            <div style={{ flex: 1, background: '#f8fafc', borderRadius: '16px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '10px', border: '1px solid #e2e8f0' }}>
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.92, x: -12 }}
+                                    whileInView={{ opacity: 1, scale: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.45, delay: 0.4, ease: "easeOut" }}
+                                    style={{ background: '#ffffff', padding: '10px 12px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.03)', display: 'flex', gap: '6px', alignItems: 'flex-start' }}
+                                >
                                     <div style={{ color: '#0066ff', marginTop: '1px', flexShrink: 0 }}>
                                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0066ff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                                     </div>
-                                    <div style={{ fontSize: '0.58rem', color: '#374151', lineHeight: '1.3' }}>Match me with elite founders having Fintech exits.</div>
-                                </div>
-                                <div style={{ background: '#0066ff', color: '#ffffff', padding: '8px 10px', borderRadius: '12px', alignSelf: 'flex-end', maxWidth: '95%', fontSize: '0.58rem', lineHeight: '1.3', boxShadow: '0 3px 8px rgba(0,102,255,0.15)' }}>
+                                    <div style={{ fontSize: '0.62rem', color: '#374151', lineHeight: '1.4', fontWeight: 500 }}>Match me with elite founders having Fintech exits.</div>
+                                </motion.div>
+
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.92, x: 12 }}
+                                    whileInView={{ opacity: 1, scale: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.45, delay: 0.9, ease: "easeOut" }}
+                                    style={{ background: '#0066ff', color: '#ffffff', padding: '10px 12px', borderRadius: '12px', alignSelf: 'flex-end', maxWidth: '95%', fontSize: '0.62rem', lineHeight: '1.4', boxShadow: '0 6px 16px rgba(0,102,255,0.18)', fontWeight: 600 }}
+                                >
                                     Found 3 matching anchors. 98% compatibility algorithm applied.
-                                </div>
+                                </motion.div>
                             </div>
+
                         </motion.div>
 
                         {/* Card 2: Personalization */}
@@ -65,19 +81,51 @@ export default function AISection() {
                                 AI tailors pitch decks dynamically to each angel investor's historical thesis records.
                             </p>
                             
-                            <div style={{ flex: 1, background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                                <div style={{ width: '130px', height: '130px', borderRadius: '50%', border: '4px dashed #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                                    <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#0066ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '1.25rem', boxShadow: '0 8px 16px rgba(0,102,255,0.2)' }}>
-                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                                    </div>
-                                    <div style={{ position: 'absolute', top: '-10px', right: '10px', width: '30px', height: '30px', borderRadius: '50%', background: '#a3e635', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>
-                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 12c.5 0 1 .5 1 1v2c0 .5-.5 1-1 1H6c-.5 0-1-.5-1-1v-2c0-.5.5-1 1-1"/><path d="M12 2A10 10 0 0 0 2 12c0 2.5.8 4.7 2.2 6.5"/><path d="M22 12A10 10 0 0 0 12 2"/><path d="M19.8 18.5A10 10 0 0 1 12 22"/></svg>
-                                    </div>
-                                    <div style={{ position: 'absolute', bottom: '10px', left: '-5px', width: '30px', height: '30px', borderRadius: '50%', background: '#facc15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>
-                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                                    </div>
+                            <div style={{ flex: 1, background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: '160px' }}>
+                                {/* Static Dashed Circle (SVG for dash control) */}
+                                <div style={{ position: 'absolute', width: '140px', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                                    <svg width="140" height="140" viewBox="0 0 140 140">
+                                        <circle cx="70" cy="70" r="65" stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="6 4" fill="none" />
+
+                                    </svg>
+                                </div>
+
+
+
+
+                                {/* Rotating invisible orbital layer for Satellites */}
+                                <motion.div 
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 24, ease: "linear", repeat: Infinity }}
+                                    style={{ width: '130px', height: '130px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', pointerEvents: 'none' }}
+                                >
+                                    {/* Satellite 1: Top Center - Sparkles (AI magic) */}
+                                    <motion.div 
+                                        animate={{ rotate: -360 }}
+                                        transition={{ duration: 24, ease: "linear", repeat: Infinity }}
+                                        style={{ position: 'absolute', top: 0, left: '50%', x: '-50%', y: '-50%', width: '32px', height: '32px', borderRadius: '50%', background: '#a3e635', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', border: '1.5px solid white', boxShadow: '0 3px 8px rgba(0,0,0,0.05)', pointerEvents: 'auto' }}
+                                    >
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                                    </motion.div>
+                                    
+                                    {/* Satellite 2: Bottom Center - TrendingUp (Scale) */}
+                                    <motion.div 
+                                        animate={{ rotate: -360 }}
+                                        transition={{ duration: 24, ease: "linear", repeat: Infinity }}
+                                        style={{ position: 'absolute', bottom: 0, left: '50%', x: '-50%', y: '50%', width: '32px', height: '32px', borderRadius: '50%', background: '#facc15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', border: '1.5px solid white', boxShadow: '0 3px 8px rgba(0,0,0,0.05)', pointerEvents: 'auto' }}
+                                    >
+                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111827" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                                    </motion.div>
+                                </motion.div>
+
+                                {/* Static Center Icon - Presentation Screen */}
+                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#0066ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '1.25rem', boxShadow: '0 8px 16px rgba(0,102,255,0.2)', cursor: 'pointer', zIndex: 1 }}>
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="12" rx="2" ry="2"/><line x1="7" y1="20" x2="17" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>
                                 </div>
                             </div>
+
+
+
                         </motion.div>
 
                         {/* Card 3: Autonomous Grade */}
@@ -90,22 +138,42 @@ export default function AISection() {
                                 AI continuously audits and keeps your startup parameters relevant and optimized for scaling.
                             </p>
                             
-                            <div style={{ flex: 1, background: '#f8fafc', borderRadius: '16px', padding: '0.85rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#ffffff', padding: '5px 8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                            <motion.div 
+                                style={{ flex: 1, background: '#f8fafc', borderRadius: '16px', padding: '0.85rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}
+                            >
+                                <motion.div 
+                                    animate={{ borderColor: ['#e2e8f0', '#0066ff', '#e2e8f0'] }}
+                                    transition={{ duration: 3, repeat: Infinity }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#ffffff', padding: '6px 10px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}
+                                >
                                      <div style={{ color: '#0066ff', flexShrink: 0 }}>
                                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                                      </div>
-                                     <div style={{ fontSize: '0.58rem', color: '#6b7280' }}>Ask AI to evaluate cap table...</div>
-                                </div>
-                                <div style={{ marginTop: '3px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {['Audit cap structure', 'Verify validation data', 'Rate investor thesis'].map((item, idx) => (
-                                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '5px 8px', borderRadius: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-                                            <span style={{ fontSize: '0.58rem', color: '#374151', fontWeight: 500 }}>{item}</span>
-                                            <span style={{ fontSize: '0.58rem', color: '#0066ff' }}>→</span>
-                                        </div>
+                                     <div style={{ fontSize: '0.62rem', color: '#4b5563', fontWeight: 600 }}>Ask AI to evaluate cap table...</div>
+                                </motion.div>
+
+                                <div style={{ marginTop: '3px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                                    {[
+                                        'Audit cap structure', 
+                                        'Verify validation data', 
+                                        'Rate investor thesis'
+                                    ].map((item, idx) => (
+                                        <motion.div 
+                                            key={idx} 
+                                            initial={{ opacity: 0, x: -15 }}
+                                            whileInView={{ opacity: 1, x: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ duration: 0.35, delay: 0.5 + idx * 0.22, ease: "easeOut" }}
+                                            whileHover={{ x: 2, background: '#f9fafb' }}
+                                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#ffffff', padding: '6px 10px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', border: '1px solid #f3f4f6', cursor: 'pointer', transition: 'background 0.2s' }}
+                                        >
+                                            <span style={{ fontSize: '0.62rem', color: '#111827', fontWeight: 600 }}>{item}</span>
+                                            <span style={{ fontSize: '0.62rem', color: '#0066ff', fontWeight: 800 }}>→</span>
+                                        </motion.div>
                                     ))}
                                 </div>
-                            </div>
+                            </motion.div>
+
                         </motion.div>
 
                     </div>

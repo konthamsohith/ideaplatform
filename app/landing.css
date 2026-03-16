@@ -17,6 +17,8 @@
     bottom: 0;
     z-index: -1;
     overflow: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .hero-bg-ken {
@@ -141,6 +143,8 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03), inset 0 0 0 1px rgba(255, 255, 255, 1);
     display: flex;
     flex-direction: column;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 /* Card 1: Highlights */
@@ -2482,6 +2486,7 @@
 .ip-footer-right {
     display: flex;
     gap: 6rem;
+    margin-right: 8rem;
 }
 
 .ip-footer-column {
@@ -3016,4 +3021,45 @@
         padding: 1.5rem !important;
     }
 }
+
+.mockup-body {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+}
+
+@media (max-width: 820px) {
+    .navbar-links {
+        display: none !important;
+    }
+    .navbar-actions {
+        display: none !important;
+    }
+    .navbar-burger {
+        display: flex !important;
+    }
+    .mockup-body {
+        grid-template-columns: 1fr !important;
+    }
+    .mockup-sidebar {
+        display: none !important;
+    }
+    .social-proof-pill {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        border-radius: 16px !important;
+    }
+    .social-proof-stars {
+        justify-content: center !important;
+        width: 100% !important;
+        margin-top: 4px;
+    }
+    .hero-title {
+        font-size: 2.5rem !important;
+        line-height: 1.1 !important;
+    }
+    .hero-subtitle {
+        font-size: 1rem !important;
+    }
+}
+
 

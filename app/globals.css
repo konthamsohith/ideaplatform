@@ -107,10 +107,11 @@ html.lenis {
 * {
   box-sizing: border-box;
   /* universal transition polish */
-  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-property: color, background-color, border-color, box-shadow;
   transition-duration: 0.18s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 
 body {
   margin: 0;
@@ -325,11 +326,28 @@ a {
   font-size: 0.9375rem;
   font-weight: 500;
   color: #0f172a;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .nav-link:hover {
   opacity: 0.6;
+}
+
+.nav-link.active {
+  color: #0066ff;
+  font-weight: 600;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #0066ff;
+  border-radius: 2px;
 }
 
 .navbar-actions {
