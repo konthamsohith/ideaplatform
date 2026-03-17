@@ -102,7 +102,7 @@ export default function SubmitIdeaPage() {
                         form="submit-form"
                         type="submit"
                         disabled={isSubmitting}
-                        style={{ background: "var(--blue)", border: "none", padding: "0.6rem 1.5rem", borderRadius: "10px", fontSize: "0.85rem", fontWeight: 700, color: "white", cursor: "pointer", boxShadow: "0 4px 12px rgba(0, 122, 255, 0.2)" }}
+                        style={{ background: "#000000", border: "none", padding: "0.6rem 1.5rem", borderRadius: "10px", fontSize: "0.85rem", fontWeight: 700, color: "white", cursor: "pointer" }}
                     >
                         {isSubmitting ? "Finalizing..." : "Publish to Registry"}
                     </button>
@@ -278,7 +278,7 @@ export default function SubmitIdeaPage() {
                                     style={{
                                         width: "48px",
                                         height: "26px",
-                                        background: isCollaborative ? "var(--lime)" : "#e5e7eb",
+                                        background: isCollaborative ? "#0bda51" : "#e5e7eb",
                                         borderRadius: "20px",
                                         position: "relative",
                                         cursor: "pointer",
